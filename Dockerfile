@@ -28,10 +28,15 @@ RUN mkdir build
 WORKDIR /home/$USERNAME/Livox-SDK2/build
 RUN cmake .. && make -j2 && sudo make install
 
+WORKDIR /home/$USERNAME/
 
-RUN /bin/bash -c '. /opt/ros/humble/setup.bash;'
+# Install livox_ros_driver2
+RUN git clone https://github.com/Livox-SDK/livox_ros_driver2.git ws_livox/src/livox_ros_driver2
+RUN /bin/bash -c 'source /opt/ros/humble/setup.sh && /home/user/ws_livox/src/livox_ros_driver2/build.sh humble'
 
 
 RUN sudo apt install -y vim
-WORKDIR /home/$USERNAME/
+
+RUN echo "source /opt/ros/humble/setup.sh" >> ~/.bashrc
+RUN echo "source /home/user/ws_livox/install/setup.sh" >> ~/.bashrc
 
