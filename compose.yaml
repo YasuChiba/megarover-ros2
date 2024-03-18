@@ -11,4 +11,7 @@ services:
     ipc: host
     pid: host
     environment:
-      - DISPLAY
+      # set DISPLAY environment variable
+      - DISPLAY=${DISPLAY}
+
+

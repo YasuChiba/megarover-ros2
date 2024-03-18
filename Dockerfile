@@ -39,4 +39,6 @@ RUN sudo apt install -y vim
 
 RUN echo "source /opt/ros/humble/setup.sh" >> ~/.bashrc
 RUN echo "source /home/user/ws_livox/install/setup.sh" >> ~/.bashrc
+RUN echo "source /home/user/workspace/install/setup.sh" >> ~/.bashrc
+
 

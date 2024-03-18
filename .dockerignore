@@ -1,0 +1,19 @@
+# Ignore git and SVN directories
+.git
+.svn
+
+# Ignore .env file containing environment variables
+.env
+
+# Ignore build directories
+**/build/
+
+# Ignore log files
+*.log
+
+# Ignore cache files
+**/__pycache__/
+*.py[cod]
+
+
+/workspace
