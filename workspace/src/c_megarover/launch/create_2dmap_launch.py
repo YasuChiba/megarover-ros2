@@ -4,6 +4,7 @@ from launch import LaunchDescription
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 import launch
+from launch.actions import DeclareLaunchArgument
 
 ################### user configure parameters for ros2 start ###################
 xfer_format   = 0    # 0-Pointcloud2(PointXYZRTL), 1-customized pointcloud format
@@ -34,6 +35,9 @@ livox_ros2_params = [
 
 
 def generate_launch_description():
+    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
+
+
     livox_driver = Node(
         package='livox_ros_driver2',
         executable='livox_ros_driver2_node',
@@ -65,11 +69,43 @@ def generate_launch_description():
         }]
     )
     
+    # launch slam_toolbox's `online_sync_launch.py`
+    #slam_toolboxの起動オプション設定
+    slam_params_file = LaunchConfiguration('slam_params_file')
+    declare_slam_params_file_cmd = DeclareLaunchArgument(
+        'slam_params_file',
+        default_value=os.path.join(get_package_share_directory("c_megarover"),
+                                   'config', '2dslam_config.yaml'),
+        description='Full path to the ROS2 parameters file to use for the slam_toolbox node')
+
+    #slam_toolboxの起動設定
+    start_async_slam_toolbox_node = Node(
+        parameters=[
+          slam_params_file,
+          {'use_sim_time': use_sim_time}
+        ],
+        package='slam_toolbox',
+        executable='async_slam_toolbox_node',
+        name='slam_toolbox',
+        output='screen')
+
+
+    # add static_transform_publisher.
+    static_transform_publisher1 = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments=['0', '0', '0', '0', '0', '0', 'base_footprint', 'livox_frame'],
+        output='screen'
+    )
+
     
 
     return LaunchDescription([
+        static_transform_publisher1,
         livox_driver,
         pointcloud_to_laserscan,
+        declare_slam_params_file_cmd,
+        start_async_slam_toolbox_node,
         # launch.actions.RegisterEventHandler(
         #     event_handler=launch.event_handlers.OnProcessExit(
         #         target_action=livox_rviz,

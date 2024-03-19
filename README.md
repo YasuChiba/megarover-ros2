@@ -26,3 +26,11 @@ ros2 launch c_megarover msg_MID360_launch.py
 ros2 bag record -a
 ros2 bag play hoge
 ```
+
+
+# memo
+
+## slam_toolbox
+slam_toolboxはodomが必須なので、create_2dmap_launch.pyはodomがある環境で試す。
+
+

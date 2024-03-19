@@ -36,6 +36,7 @@ RUN /bin/bash -c 'source /opt/ros/humble/setup.sh && /home/user/ws_livox/src/liv
 
 
 RUN sudo apt install -y vim
+RUN sudo apt install -y ros-humble-slam-toolbox
 
 RUN echo "source /opt/ros/humble/setup.sh" >> ~/.bashrc
 RUN echo "source /home/user/ws_livox/install/setup.sh" >> ~/.bashrc
