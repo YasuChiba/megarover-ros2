@@ -2,6 +2,11 @@
 
 `xhost +local:`を実行して置かないとrvizが使えないかも?
 
+1. clone
+submoduleごとclone
+```
+git clone --recursive https://github.com/YasuChiba/megarover-ros2.git
+```
 
 1. build
 ```
