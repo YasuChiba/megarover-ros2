@@ -2,3 +2,7 @@
 	path = workspace/src/thirdparty/pointcloud_to_laserscan
 	url = https://github.com/ros-perception/pointcloud_to_laserscan.git
 	branch = humble
+[submodule "workspace/src/thirdparty/FAST_LIO"]
+	path = workspace/src/thirdparty/FAST_LIO
+	url = https://github.com/hku-mars/FAST_LIO.git
+	branch = ROS2
