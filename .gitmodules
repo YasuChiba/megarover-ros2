@@ -6,3 +6,6 @@
 	path = workspace/src/thirdparty/FAST_LIO
 	url = https://github.com/hku-mars/FAST_LIO.git
 	branch = ROS2
+[submodule "workspace/src/thirdparty/ros2bag_tools"]
+	path = workspace/src/thirdparty/ros2bag_tools
+	url = https://github.com/AIT-Assistive-Autonomous-Systems/ros2bag_tools.git

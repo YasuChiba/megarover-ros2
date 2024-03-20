@@ -6,6 +6,7 @@ from launch_ros.actions import Node
 import launch
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import PathJoinSubstitution, TextSubstitution
+from launch.conditions import IfCondition
 
 ################### user configure parameters for ros2 start ###################
 xfer_format   = 1    # 0-Pointcloud2(PointXYZRTL), 1-customized pointcloud format
@@ -40,15 +41,16 @@ def generate_launch_description():
     package_path = get_package_share_directory('c_megarover')
     default_config_path = os.path.join(package_path, 'config')
     use_sim_time = LaunchConfiguration('use_sim_time', default=False)
+    rviz_use = LaunchConfiguration('rviz')
 
 
-    livox_driver = Node(
-        package='livox_ros_driver2',
-        executable='livox_ros_driver2_node',
-        name='livox_lidar_publisher',
-        output='screen',
-        parameters=livox_ros2_params
-        )
+    #livox_driver = Node(
+    #    package='livox_ros_driver2',
+    #    executable='livox_ros_driver2_node',
+    #    name='livox_lidar_publisher',
+    #    output='screen',
+    #    parameters=livox_ros2_params
+    #    )
 
  
     # add static_transform_publisher.
@@ -80,14 +82,14 @@ def generate_launch_description():
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
+        condition=IfCondition(rviz_use),
         arguments=['-d', os.path.join(get_package_share_directory('c_megarover'), 'config', '3dslam.rviz')],
-    )
-    
+    )    
 
     return LaunchDescription([
         static_transform_publisher1,
         static_transform_publisher2,
-        livox_driver,
+        #livox_driver,
         fast_lio_node,
         rviz_node
         # launch.actions.RegisterEventHandler(
