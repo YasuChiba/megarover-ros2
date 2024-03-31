@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<robot name="mega3" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <link name="livox_frame">
+        <visual>
+            <geometry>
+                <cylinder radius="0.03" length="0.03" />
+            </geometry>
+        </visual>
+        <collision>
+            <geometry>
+                <cylinder radius="0.030" length="0.03" />
+            </geometry>
+        </collision>
+        <inertial>
+            <mass value="0.25" />
+            <inertia ixx="0.00021033333"
+                ixy="0" ixz="0"
+                iyx="0" iyy="0.00021033333"
+                iyz="0"
+                izx="0" izy="0" izz="0.0001125" />
+        </inertial>
+    </link>
+
+    <gazebo reference="livox_frame">
+        <material>Gazebo/Blue</material>
+    </gazebo>
+
+    <joint name="lidar_joint" type="fixed">
+        <parent link="base_link" />
+        <child link="livox_frame" />
+        <origin xyz="0 0.1 0.2" rpy="0 0 0" />
+    </joint>
+
+
+</robot>

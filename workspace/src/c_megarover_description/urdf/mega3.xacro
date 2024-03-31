@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<robot name="mega3" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find c_megarover_description)/urdf/mega3_base_model.xacro" />
+  <xacro:include filename="$(find c_megarover_description)/urdf/mega3.gazebo" />
+
+  <xacro:include filename="$(find c_megarover_description)/urdf/mega3_lidar.xacro" />
+  <xacro:include filename="$(find c_megarover_description)/urdf/mega3_lidar.gazebo" />
+
+  <!-- OPTION: LRF TG30 -->
+  <!-- <xacro:include filename="$(find vs_rover_options_description)/urdf/lrf/tg30_mega3.xacro" /> -->
+  <!-- OPTION: bumper sensor -->
+  <!-- <xacro:include filename="$(find vs_rover_options_description)/urdf/bumper/bumper_mega3.xacro" />
+  <xacro:bumperbaseboard prefix="front" parent="base_link" xyz="0 0.19 0.02" z_dir="180" />
+  <xacro:bumperbaseboard prefix="back" parent="base_link" xyz="0 -0.19 0.02" z_dir="0" /> -->
+  <!-- OPTION: camera stay -->
+  <!-- <xacro:include filename="$(find vs_rover_options_description)/urdf/cam_stay/cam_stay_mega3.xacro" /> -->
+  <!-- OPTION: Intel Realsense depth camera D435i (camera stay required) -->
+  <!-- <xacro:include filename="$(find vs_rover_options_description)/urdf/depth_cam/_d435i.urdf.xacro" />
+  <xacro:sensor_d435i parent="cam_mount_link" use_nominal_extrinsics="true">
+    <origin xyz="0.0295 0 0.0095" rpy="0 0 0" />
+  </xacro:sensor_d435i> -->
+  <!-- OPTION: AMIR 740 (disabled by default because of interference with camera stay)-->
+  <!-- <xacro:include filename="$(find amir_description)/urdf/amir_for_rover.xacro" />
+  <joint name="base_fixed" type="fixed">
+    <origin xyz="0.0 0.03 0.398" rpy="0 0 0" />
+    <parent link="base_link" />
+    <child link="link0_1" />
+  </joint> -->
+
+  
+</robot>

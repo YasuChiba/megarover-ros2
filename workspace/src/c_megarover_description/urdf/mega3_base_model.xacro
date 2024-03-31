@@ -1,0 +1,98 @@
+<?xml version="1.0"?>
+<robot name="mega3" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find megarover_description)/urdf/materials.xacro" />
+  <!-- <xacro:include filename="$(find megarover_description)/urdf/mega3_base_model.gazebo" /> -->
+
+  <link name="base_footprint" />
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint" />
+    <child link="base_link" />
+    <origin xyz="-0.1 0 0" rpy="0 0 -1.5708" />
+  </joint>
+
+  <link name="base_link">
+    <inertial>
+      <origin xyz="-0.0001512201285105937 -3.420007213019073e-05 0.08388833658828038" rpy="0 0 0" />
+      <mass value="11.744482" />
+      <inertia ixx="0.091465" iyy="0.06435" izz="0.1253"
+        ixy="0.001018" iyz="-0.002369"
+        ixz="0.000233" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="$(find megarover_description)/meshes/mega3/base_link.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+      <material name="silver" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="$(find megarover_description)/meshes/mega3/base_link.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="left_wheel_joint" type="continuous">
+    <origin xyz="-0.136 0.1 0.07" rpy="0 -1.5708 0" />
+    <parent link="base_link" />
+    <child link="left_wheel_1" />
+    <axis xyz="0.0 0.0 1.0" />
+  </joint>
+
+  <link name="left_wheel_1">
+    <inertial>
+      <origin xyz="0.0 0.0 0.00213" rpy="0 1.5708 0" />
+      <mass value="1.239934" />
+      <inertia ixx="0.002474" iyy="0.00174" izz="0.00174"
+        ixy="0.000" iyz="0.000"
+        ixz="-0.000" />
+    </inertial>
+    <visual>
+      <origin xyz="-0.07 -0.1 -0.136" rpy="0 1.5708 0" />
+      <geometry>
+        <mesh filename="$(find megarover_description)/meshes/mega3/left_wheel_1.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+      <material name="dark_grey" />
+    </visual>
+    <collision>
+      <origin xyz="-0.07 -0.1 -0.136" rpy="0 1.5708 0" />
+      <geometry>
+        <mesh filename="$(find megarover_description)/meshes/mega3/left_wheel_1.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="right_wheel_joint" type="continuous">
+    <origin xyz="0.136 0.1 0.07" rpy="0 -1.5708 0" />
+    <parent link="base_link" />
+    <child link="right_wheel_1" />
+    <axis xyz="0.0 0.0 1.0" />
+  </joint>
+
+  <link name="right_wheel_1">
+    <inertial>
+      <origin xyz="0 0 -0.00213" rpy="0 1.5708 0" />
+      <mass value="1.239934" />
+      <inertia ixx="0.002474" iyy="0.00174" izz="0.00174"
+        ixy="-0.000" iyz="-0.000"
+        ixz="-0.000" />
+    </inertial>
+    <visual>
+      <origin xyz="-0.07 -0.1 0.136" rpy="0 1.5708 0" />
+      <geometry>
+        <mesh filename="$(find megarover_description)/meshes/mega3/right_wheel_1.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+      <material name="dark_grey" />
+    </visual>
+    <collision>
+      <origin xyz="-0.07 -0.1 0.136" rpy="0 1.5708 0" />
+      <geometry>
+        <mesh filename="$(find megarover_description)/meshes/mega3/right_wheel_1.stl" scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+  </link>
+
+</robot>

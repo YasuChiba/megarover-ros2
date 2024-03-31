@@ -19,6 +19,7 @@ source install/setup.sh
 ```
 ros2 launch c_megarover msg_MID360_launch.py
 ros2 launch c_megarover create_3dmap_launch.py rviz:=true
+ros2 launch c_megarover create_2dmap_launch.py simulator:=false rviz:=false
 
 ```
 

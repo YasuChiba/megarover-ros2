@@ -1,13 +1,16 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 import launch
 from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition, UnlessCondition
 from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from ament_index_python.packages import get_package_share_path
+from launch.substitutions import Command, LaunchConfiguration
+from launch_ros.parameter_descriptions import ParameterValue
+
 
 ################### user configure parameters for ros2 start ###################
 xfer_format   = 0    # 0-Pointcloud2(PointXYZRTL), 1-customized pointcloud format
@@ -41,7 +44,7 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
 
     rviz_use = LaunchConfiguration('rviz')
-    simulator_use = LaunchConfiguration('simulator')
+    use_simulator = LaunchConfiguration('simulator')
 
     declare_rviz_cmd = DeclareLaunchArgument(
         'rviz', default_value='true',
@@ -59,7 +62,7 @@ def generate_launch_description():
         name='livox_lidar_publisher',
         output='screen',
         parameters=livox_ros2_params,
-        condition=UnlessCondition(simulator_use)
+        condition=UnlessCondition(use_simulator)
         )
 
     # create pointcloud_to_laserscan Node
@@ -115,12 +118,12 @@ def generate_launch_description():
             ])
 
     # add static_transform_publisher.
-    static_transform_publisher1 = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        arguments=['0', '0', '0', '0', '0', '0', 'base_footprint', 'livox_frame'],
-        output='screen'
-    )
+    #static_transform_publisher1 = Node(
+    #    package='tf2_ros',
+    #    executable='static_transform_publisher',
+    #    arguments=['0', '0', '0', '0', '0', '0', 'base_footprint', 'livox_frame'],
+    #    output='screen'
+    #)
 
     rviz_node = Node(
         package='rviz2',
@@ -129,10 +132,44 @@ def generate_launch_description():
         arguments=['-d', os.path.join(get_package_share_directory('c_megarover'), 'config', '2dslam.rviz')],
     )
 
+    joint_state_publisher_node = Node(
+        package='joint_state_publisher',
+        executable='joint_state_publisher',
+        condition=UnlessCondition(use_simulator)
+    )
+
+
+    description_package_path = get_package_share_path('c_megarover_description')
+    default_model_path = description_package_path / 'urdf/mega3.xacro'
+
+    model_arg = DeclareLaunchArgument(name='model', default_value=str(default_model_path),
+                                      description='Absolute path to robot urdf file')
+
+    robot_description = ParameterValue(Command(['xacro ', LaunchConfiguration('model')]),
+                                       value_type=str)
+    
+    robot_state_publisher_node = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        parameters=[{'robot_description': robot_description}],
+        condition=UnlessCondition(use_simulator)
+    )
+
+    pub_odom_node = Node(
+        package='megarover3_bringup',
+        executable='pub_odom',
+        name='pub_odom',
+        condition=UnlessCondition(use_simulator)
+    )
+
     
 
     return LaunchDescription([
-        static_transform_publisher1,
+        model_arg,
+        #static_transform_publisher1,
+        joint_state_publisher_node,
+        robot_state_publisher_node,
+        pub_odom_node,
         livox_driver,
         pointcloud_to_laserscan,
         declare_slam_params_file_cmd,
