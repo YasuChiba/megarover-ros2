@@ -22,6 +22,18 @@ ros2 launch c_megarover create_3dmap_launch.py rviz:=true
 
 ```
 
+micro ros agentの開始.これを実行することで、車体側とROS2経由で通信が出来るようになる。    
+dockerコンテナをUSB接続前から立ち上げていると制御基板がコンテナ内から見えないかも。  
+```
+ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyUSB0 --baudrate 115200
+```
+見えるトピックは以下のはず  
+- /rover_odo
+- /rover_sensor
+- /rover_twist
+
+
+
 3. record/play
 
 ```

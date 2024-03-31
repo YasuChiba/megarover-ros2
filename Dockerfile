@@ -34,12 +34,22 @@ WORKDIR /home/$USERNAME/
 RUN git clone https://github.com/Livox-SDK/livox_ros_driver2.git ws_livox/src/livox_ros_driver2
 RUN /bin/bash -c 'source /opt/ros/humble/setup.sh && /home/user/ws_livox/src/livox_ros_driver2/build.sh humble'
 
+# Install micro-ROS
+WORKDIR /home/$USERNAME
+RUN mkdir uros_ws
+WORKDIR /home/$USERNAME/uros_ws
+RUN git clone -b humble https://github.com/micro-ROS/micro_ros_setup.git src/micro_ros_setup
+RUN rosdep update && rosdep install --from-paths src --ignore-src -y
+RUN /bin/bash -c 'source /opt/ros/humble/setup.sh && colcon build'
+RUN /bin/bash -c 'source ~/uros_ws/install/setup.sh && ros2 run micro_ros_setup create_agent_ws.sh && ros2 run micro_ros_setup build_agent.sh'
 
-RUN sudo apt install -y vim
-RUN sudo apt install -y ros-humble-slam-toolbox
 
-RUN echo "source /opt/ros/humble/setup.sh" >> ~/.bashrc
-RUN echo "source /home/user/ws_livox/install/setup.sh" >> ~/.bashrc
-RUN echo "source /home/user/workspace/install/setup.sh" >> ~/.bashrc
+RUN sudo apt update && sudo apt install -y vim ros-humble-slam-toolbox
 
+RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
+RUN echo "source /home/user/ws_livox/install/setup.bash" >> ~/.bashrc
+RUN echo "source /home/user/uros_ws/install/setup.bash" >> ~/.bashrc
+RUN echo "source /home/user/workspace/install/setup.bash" >> ~/.bashrc
+
+WORKDIR /home/$USERNAME
 
