@@ -9,3 +9,10 @@
 [submodule "workspace/src/thirdparty/ros2bag_tools"]
 	path = workspace/src/thirdparty/ros2bag_tools
 	url = https://github.com/AIT-Assistive-Autonomous-Systems/ros2bag_tools.git
+[submodule "workspace/src/thirdparty/vs_rover_options_description"]
+	path = workspace/src/thirdparty/vs_rover_options_description
+	url = https://github.com/vstoneofficial/vs_rover_options_description.git
+	branch = humble
+[submodule "workspace/src/thirdparty/megarover3_ros2"]
+	path = workspace/src/thirdparty/megarover3_ros2
+	url = https://github.com/vstoneofficial/megarover3_ros2.git

@@ -44,7 +44,8 @@ RUN /bin/bash -c 'source /opt/ros/humble/setup.sh && colcon build'
 RUN /bin/bash -c 'source ~/uros_ws/install/setup.sh && ros2 run micro_ros_setup create_agent_ws.sh && ros2 run micro_ros_setup build_agent.sh'
 
 
-RUN sudo apt update && sudo apt install -y vim ros-humble-slam-toolbox
+RUN sudo apt update && sudo apt install -y vim ros-humble-slam-toolbox \
+                                            ros-humble-joint-state-publisher ros-humble-joint-state-publisher-gui
 
 RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
 RUN echo "source /home/user/ws_livox/install/setup.bash" >> ~/.bashrc
