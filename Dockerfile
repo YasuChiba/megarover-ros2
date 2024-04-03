@@ -45,7 +45,8 @@ RUN /bin/bash -c 'source ~/uros_ws/install/setup.sh && ros2 run micro_ros_setup 
 
 
 RUN sudo apt update && sudo apt install -y vim ros-humble-slam-toolbox \
-                                            ros-humble-joint-state-publisher ros-humble-joint-state-publisher-gui
+                                            ros-humble-joint-state-publisher ros-humble-joint-state-publisher-gui \
+                                            ros-humble-nav2-bringup
 
 RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
 RUN echo "source /home/user/ws_livox/install/setup.bash" >> ~/.bashrc
