@@ -84,7 +84,7 @@ def generate_launch_description():
         executable='rviz2',
         condition=IfCondition(rviz_use),
         arguments=['-d', os.path.join(get_package_share_directory('c_megarover'), 'config', '3dslam.rviz')],
-    )    
+    )
 
     return LaunchDescription([
         static_transform_publisher1,
