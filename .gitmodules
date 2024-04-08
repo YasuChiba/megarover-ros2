@@ -16,3 +16,6 @@
 [submodule "workspace/src/thirdparty/megarover3_ros2"]
 	path = workspace/src/thirdparty/megarover3_ros2
 	url = https://github.com/vstoneofficial/megarover3_ros2.git
+[submodule "workspace/src/FAST_LIO_LOCALIZATION_ROS2"]
+	path = workspace/src/FAST_LIO_LOCALIZATION_ROS2
+	url = https://github.com/YasuChiba/FAST_LIO_LOCALIZATION_ROS2.git
