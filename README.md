@@ -21,6 +21,7 @@ ros2 launch c_megarover msg_MID360_launch.py
 ros2 launch c_megarover create_3dmap_launch.py rviz:=true
 ros2 launch c_megarover create_2dmap_launch.py simulator:=false rviz:=false
 ros2 launch c_megarover create_3dmap_rosbag_launch.py  rviz:=true rosbag_path:=/home/user/workspace/rosbag/rosbag2_2024_04_09-03_27_26
+ros2 launch c_megarover create_3dmap_rosbag_launch.py  rviz:=true rosbag_path:=/home/user/workspace/rosbag/rosbag2_2024_04_10-01_35_06/ | grep -v "Failed to find match for fiel"
 
 ```
 

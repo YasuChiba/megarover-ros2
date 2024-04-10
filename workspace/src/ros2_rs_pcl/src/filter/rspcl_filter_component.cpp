@@ -1,3 +1,6 @@
+
+#define PCL_NO_PRECOMPILE
+
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/common/common.h>
@@ -15,6 +18,33 @@
 
 #include "ros2_rs_pcl/filter/rspcl_filter_component.hpp"
 
+#include <pcl/point_types.h>
+#include <pcl/point_cloud.h>
+#include <pcl/filters/passthrough.h>
+
+// Define the custom point type
+struct LivoxPointXyzrtlt
+{
+  PCL_ADD_POINT4D;
+  float intensity;
+  uint8_t tag;
+  uint8_t line;
+  double timestamp;
+  
+};
+
+// Register the point type with PCL
+POINT_CLOUD_REGISTER_POINT_STRUCT(
+  LivoxPointXyzrtlt,
+  (float, x, x)
+  (float, y, y)
+  (float, z, z)
+  (float, intensity, reflectivity)
+  (uint8_t, tag, tag)
+  (uint8_t, line, line)
+  (double, timestamp, timestamp)
+)
+
 
 RspclFilterComponent::RspclFilterComponent() : Node("pclsub")
 {
@@ -31,16 +61,20 @@ RspclFilterComponent::RspclFilterComponent() : Node("pclsub")
 
 void RspclFilterComponent::timer_callback(const sensor_msgs::msg::PointCloud2::SharedPtr cloud_msg)
 {
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+  //pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::PointCloud<LivoxPointXyzrtlt>::Ptr cloud(new pcl::PointCloud<LivoxPointXyzrtlt>);
+
   pcl::fromROSMsg(*cloud_msg, *cloud);
 
   //RCLCPP_INFO(this->get_logger(), "points_size(%d,%d)",cloud_msg->height,cloud_msg->width);
 
   // define a new container for the data
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZ>);
+  //pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered(new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::PointCloud<LivoxPointXyzrtlt>::Ptr cloud_filtered(new pcl::PointCloud<LivoxPointXyzrtlt>);
+
 
   // // PassThrough Filter
-  pcl::PassThrough<pcl::PointXYZ> pass;
+  pcl::PassThrough<LivoxPointXyzrtlt> pass;
   pass.setInputCloud(cloud);
   pass.setFilterFieldName("x");  // x axis
   // extract point cloud between 1.0 and 3.0 m
@@ -58,7 +92,7 @@ void RspclFilterComponent::timer_callback(const sensor_msgs::msg::PointCloud2::S
   // avg.filter(*cloud_filtered);
 
   // Voxel Grid: pattern 1
-  pcl::VoxelGrid<pcl::PointXYZ> voxelGrid;
+  pcl::VoxelGrid<LivoxPointXyzrtlt> voxelGrid;
   voxelGrid.setInputCloud(cloud_filtered);
   leaf_size_ = 0.1;
   //set the leaf size (x, y, z)
@@ -85,10 +119,10 @@ void RspclFilterComponent::timer_callback(const sensor_msgs::msg::PointCloud2::S
   // sor.filter (*cloud_filtered);
 
   // // Radius Outlier Removal
-  pcl::RadiusOutlierRemoval<pcl::PointXYZ> outrem;
+  pcl::RadiusOutlierRemoval<LivoxPointXyzrtlt> outrem;
   outrem.setInputCloud(cloud_filtered);
   outrem.setRadiusSearch(0.1);
-  outrem.setMinNeighborsInRadius(2);
+  outrem.setMinNeighborsInRadius(4);
   outrem.setKeepOrganized(false);
   outrem.filter(*cloud_filtered);
 

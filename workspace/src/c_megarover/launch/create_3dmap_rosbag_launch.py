@@ -54,20 +54,21 @@ def generate_launch_description():
     )
 
     # launch livox_to_pointcloud2 node.
-    livox_to_pointcloud2_node = Node(
-        package='livox_to_pointcloud2',
-        executable='livox_to_pointcloud2_node',
-        output='screen',
-        remappings=[('livox_pointcloud','/livox/lidar'),
-                        ('converted_pointcloud2','/livox/pointcloud2')],
-    )
+    #livox_to_pointcloud2_node = Node(
+    #    package='livox_to_pointcloud2',
+    #    executable='livox_to_pointcloud2_node',
+    #    output='screen',
+    #    remappings=[('livox_pointcloud','/livox/lidar'),
+    #                    ('converted_pointcloud2','/livox/pointcloud2')],
+    #)
 
     pointcloud2_filter = Node(
         package='ros2_rs_pcl',
         executable='rs_pcl_filter',
+        name='pcl_filter_node',
         output='screen',
-        remappings=[('in_cloud','/livox/pointcloud2'),
-                    ('out_cloud','/livox/filtered_pointcloud2')],
+        remappings=[('in_cloud','/livox/lidar'),
+                    ('out_cloud','/livox/filtered')],
     )
 
     rviz_node = Node(
@@ -89,7 +90,7 @@ def generate_launch_description():
         static_transform_publisher1,
         static_transform_publisher2,
         fast_lio_node,
-        livox_to_pointcloud2_node,
+        #livox_to_pointcloud2_node,
         pointcloud2_filter,
         rosbag_play,
         rviz_node
