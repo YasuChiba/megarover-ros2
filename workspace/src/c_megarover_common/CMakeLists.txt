@@ -22,64 +22,59 @@ include_directories(
   SYSTEM
   ${PCL_INCLUDE_DIRS}
 )
+include_directories(include)
+
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
-include_directories(include)
-
+#====================
 
 add_library(pointcloud_filter SHARED
   src/pointcloud_filter/pointcloud_filter.cpp
 )
-
-add_library(livox_to_pointcloud2 SHARED
-  src/livox_to_pointcloud2.cpp
-)
-
 ament_target_dependencies(pointcloud_filter
   rclcpp
   rclcpp_components
   sensor_msgs
   pcl_conversions
 )
+target_include_directories(pointcloud_filter
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(pointcloud_filter ${PCL_LIBRARIES})
 
+rclcpp_components_register_nodes(pointcloud_filter "PointCloudFilter")
+
+
+#=========================
+
+
+
+add_library(livox_to_pointcloud2 SHARED
+  src/livox_to_pointcloud2.cpp
+)
 ament_target_dependencies(livox_to_pointcloud2
   rclcpp
   rclcpp_components
   sensor_msgs
   livox_ros_driver2
 )
-
-
-#target_compile_options(minimal_comp_node PUBLIC -Wall)
-
-
-target_include_directories(pointcloud_filter
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-)
-
 target_include_directories(livox_to_pointcloud2
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-
-
-
-target_link_libraries(pointcloud_filter ${PCL_LIBRARIES})
-
-rclcpp_components_register_nodes(pointcloud_filter "PointCloudFilter")
-
 rclcpp_components_register_nodes(livox_to_pointcloud2 "LivoxToPointCloud2")
 
+
+#====================================================================
 
 install(
   DIRECTORY include/
   DESTINATION include
 )
-
 
 install(TARGETS
   pointcloud_filter
@@ -98,7 +93,6 @@ install(TARGETS
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include
 )
-
 
 install(
   DIRECTORY launch
