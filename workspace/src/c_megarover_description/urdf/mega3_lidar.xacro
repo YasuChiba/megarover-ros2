@@ -33,4 +33,13 @@
     </joint>
 
 
+    <!-- For FAST_LIO -->
+    <link name="camera_init" />
+    <joint name="camera_init_joint" type="fixed">
+        <parent link="livox_frame" />
+        <child link="camera_init" />
+        <origin xyz="0 0 0" rpy="0 0 0" />
+    </joint>
+    
+
 </robot>
