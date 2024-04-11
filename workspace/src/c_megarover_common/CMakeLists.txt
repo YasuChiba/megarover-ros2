@@ -30,7 +30,7 @@ add_definitions(${PCL_DEFINITIONS})
 #====================
 
 add_library(pointcloud_filter SHARED
-  src/pointcloud_filter/pointcloud_filter.cpp
+  src/pointcloud_filter.cpp
 )
 ament_target_dependencies(pointcloud_filter
   rclcpp
@@ -45,8 +45,9 @@ target_include_directories(pointcloud_filter
 )
 target_link_libraries(pointcloud_filter ${PCL_LIBRARIES})
 
-rclcpp_components_register_nodes(pointcloud_filter "PointCloudFilter")
-
+rclcpp_components_register_node(pointcloud_filter 
+  PLUGIN "PointCloudFilter"
+  EXECUTABLE pointcloud_filter_node)
 
 #=========================
 
@@ -66,8 +67,9 @@ target_include_directories(livox_to_pointcloud2
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
 )
-rclcpp_components_register_nodes(livox_to_pointcloud2 "LivoxToPointCloud2")
-
+rclcpp_components_register_node(livox_to_pointcloud2 
+  PLUGIN "LivoxToPointCloud2"
+  EXECUTABLE livox_to_pointcloud2_node)
 
 #====================================================================
 

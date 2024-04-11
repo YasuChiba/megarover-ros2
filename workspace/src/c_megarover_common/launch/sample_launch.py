@@ -13,10 +13,10 @@ def generate_launch_description():
                 # composable node for FilterNode
                 ComposableNode(
                     package='c_megarover_common',
-                    plugin='pointcloud_filter::FilterNode',
+                    plugin='PointCloudFilter',
                     name='filter_node',
                     extra_arguments=[{'use_intra_process_comms': True}],
-                    remappings=[('/in_cloud', '/livox/lidar')]
+                    remappings=[('/in_cloud', '/livox/lidar'), ('/out_cloud', "/livox/filtered_lidar")]
                 ),
                 # composable node for livox_to_pointcloud2
                 ComposableNode(

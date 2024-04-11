@@ -3,12 +3,12 @@
 
 // ref: https://github.com/tasada038/ros2_rs_pcl
 
-class FilterNode : public rclcpp::Node
+class PointCloudFilter : public rclcpp::Node
 {
 public:
-  FilterNode(
+  PointCloudFilter(
       const rclcpp::NodeOptions &options = rclcpp::NodeOptions());
-  FilterNode(
+  PointCloudFilter(
       const std::string &name_space,
       const rclcpp::NodeOptions &options = rclcpp::NodeOptions());
 

@@ -1,24 +1,24 @@
 #include <rclcpp/rclcpp.hpp>
 #include "rclcpp_components/register_node_macro.hpp"
-#include "c_megarover_common/pointcloud_filter/pointcloud_filter.hpp"
-#include "c_megarover_common/pointcloud_filter/pointcloud_types.hpp"
+#include "c_megarover_common/pointcloud_filter.hpp"
+#include "c_megarover_common/pointcloud_types.hpp"
 
-FilterNode::FilterNode(
-    const rclcpp::NodeOptions &options) : FilterNode("", options)
+PointCloudFilter::PointCloudFilter(
+    const rclcpp::NodeOptions &options) : PointCloudFilter("", options)
 {
 }
 
-FilterNode::FilterNode(
+PointCloudFilter::PointCloudFilter(
     const std::string &name_space,
     const rclcpp::NodeOptions &options) : Node("pointcloud_filter_node", name_space, options)
 {
   pcl_subscription_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
-      "in_cloud", 10, std::bind(&FilterNode::pcl_callback, this, std::placeholders::_1));
+      "in_cloud", 10, std::bind(&PointCloudFilter::pcl_callback, this, std::placeholders::_1));
   pcl_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("out_cloud", 10);
 }
 
 // filter point cloud
-void FilterNode::pcl_callback(const sensor_msgs::msg::PointCloud2::SharedPtr cloud_msg)
+void PointCloudFilter::pcl_callback(const sensor_msgs::msg::PointCloud2::SharedPtr cloud_msg)
 {
 
   pcl::PointCloud<LivoxPointXyzitlt>::Ptr cloud(new pcl::PointCloud<LivoxPointXyzitlt>);
@@ -111,4 +111,4 @@ void FilterNode::pcl_callback(const sensor_msgs::msg::PointCloud2::SharedPtr clo
   pcl_publisher_->publish(sensor_msg);
 }
 
-RCLCPP_COMPONENTS_REGISTER_NODE(FilterNode)
+RCLCPP_COMPONENTS_REGISTER_NODE(PointCloudFilter)
