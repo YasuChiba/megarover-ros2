@@ -15,6 +15,8 @@ find_package(geometry_msgs REQUIRED)
 find_package(pcl_conversions REQUIRED)
 #find_package(PCL REQUIRED COMPONENTS common io)
 find_package(PCL REQUIRED)
+find_package(livox_ros_driver2 REQUIRED)
+
 
 include_directories(
   SYSTEM
@@ -33,6 +35,10 @@ add_library(pointcloud_filter SHARED
   src/pointcloud_filter/pointcloud_filter.cpp
 )
 
+add_library(livox_to_pointcloud2 SHARED
+  src/livox_to_pointcloud2.cpp
+)
+
 target_compile_definitions(minimal_comp_node
   PRIVATE "MY_LIBRARY_BUILDING_LIBRARY"
 )
@@ -49,6 +55,14 @@ ament_target_dependencies(pointcloud_filter
   pcl_conversions
 )
 
+ament_target_dependencies(livox_to_pointcloud2
+  rclcpp
+  rclcpp_components
+  sensor_msgs
+  livox_ros_driver2
+)
+
+
 #target_compile_options(minimal_comp_node PUBLIC -Wall)
 
 
@@ -64,12 +78,22 @@ target_include_directories(pointcloud_filter
     $<INSTALL_INTERFACE:include>
 )
 
+target_include_directories(livox_to_pointcloud2
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+
 
 target_link_libraries(pointcloud_filter ${PCL_LIBRARIES})
 
 rclcpp_components_register_nodes(minimal_comp_node "minimal_comp::MinimalCompNode1")
 
 rclcpp_components_register_nodes(pointcloud_filter "pointcloud_filter::FilterNode")
+
+rclcpp_components_register_nodes(livox_to_pointcloud2 "LivoxToPointCloud2")
+
 
 install(
   DIRECTORY include/
@@ -92,6 +116,16 @@ install(TARGETS
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include
 )
+
+install(TARGETS
+  livox_to_pointcloud2
+  EXPORT export_${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 
 install(
   DIRECTORY launch

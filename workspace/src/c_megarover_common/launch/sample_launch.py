@@ -17,7 +17,15 @@ def generate_launch_description():
                     name='filter_node',
                     extra_arguments=[{'use_intra_process_comms': True}],
                     remappings=[('/in_cloud', '/livox/lidar')]
+                ),
+                # composable node for livox_to_pointcloud2
+                ComposableNode(
+                    package='c_megarover_common',
+                    plugin='LivoxToPointCloud2',
+                    name='LivoxToPointCloud2',
+                    extra_arguments=[{'use_intra_process_comms': True}]
                 )
+
             ],
             output='screen'
     )
