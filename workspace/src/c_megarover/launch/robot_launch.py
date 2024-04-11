@@ -33,7 +33,7 @@ def generate_launch_description():
     )
 
     description_package_path = get_package_share_path("c_megarover_description")
-    default_model_path = description_package_path / "urdf/mega3.xacro"
+    default_model_path = os.path.join(description_package_path,"urdf", "mega3.xacro")
     declare_robot_model_path = DeclareLaunchArgument(
         name="robot_model_path",
         default_value=str(default_model_path),

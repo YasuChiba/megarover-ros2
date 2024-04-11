@@ -2,9 +2,10 @@
     ros__parameters:
         feature_extract_enable: false
         point_filter_num: 3
-        max_iteration: 3
-        filter_size_surf: 0.1
-        filter_size_map: 0.15
+        max_iteration: 4
+        filter_size_surf: 0.1  # 0.05~0.15 for indoor scenes, filter_size_surf = 0.5 for outdoor scenes.
+                                # https://github.com/hku-mars/LiDAR_IMU_Init
+        filter_size_map: 0.15  # 0.15~0.25 for indoor scenes, filter_size_map = 0.5 for outdoor scenes.
         cube_side_length: 200.0
         runtime_pos_log_enable: false
         map_file_path: "./test.pcd"
@@ -40,7 +41,7 @@
             path_en: true                # true: publish Path
             effect_map_en: false         # true: publish Effects
             map_en: true                 # true: publish Map cloud
-            scan_publish_en:  true       # false: close all the point cloud output
+            scan_publish_en:  false       # false: close all the point cloud output
             dense_publish_en: false      # false: low down the points number in a global-frame point clouds scan.
             scan_bodyframe_pub_en: true  # true: output the point cloud scans in IMU-body-frame
 
