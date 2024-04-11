@@ -70,7 +70,7 @@ target_include_directories(livox_to_pointcloud2
 
 target_link_libraries(pointcloud_filter ${PCL_LIBRARIES})
 
-rclcpp_components_register_nodes(pointcloud_filter "pointcloud_filter::FilterNode")
+rclcpp_components_register_nodes(pointcloud_filter "PointCloudFilter")
 
 rclcpp_components_register_nodes(livox_to_pointcloud2 "LivoxToPointCloud2")
 
