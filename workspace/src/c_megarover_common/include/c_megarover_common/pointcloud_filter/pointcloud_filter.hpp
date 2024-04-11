@@ -16,6 +16,7 @@ namespace pointcloud_filter
   private:
     void pcl_callback(const sensor_msgs::msg::PointCloud2::SharedPtr cloud_msg);
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr pcl_subscription_;
+    rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr pcl_publisher_;
   };
 
 }

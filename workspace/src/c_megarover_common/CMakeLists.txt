@@ -9,9 +9,19 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(pcl_conversions REQUIRED)
+#find_package(PCL REQUIRED COMPONENTS common io)
+find_package(PCL REQUIRED)
+
+include_directories(
+  SYSTEM
+  ${PCL_INCLUDE_DIRS}
+)
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
 
 include_directories(include)
 
@@ -19,12 +29,24 @@ add_library(minimal_comp_node SHARED
   src/minimal_comp_node1.cpp
 )
 
+add_library(pointcloud_filter SHARED
+  src/pointcloud_filter/pointcloud_filter.cpp
+)
+
 target_compile_definitions(minimal_comp_node
   PRIVATE "MY_LIBRARY_BUILDING_LIBRARY"
 )
+
 ament_target_dependencies(minimal_comp_node
   rclcpp
   rclcpp_components
+)
+
+ament_target_dependencies(pointcloud_filter
+  rclcpp
+  rclcpp_components
+  sensor_msgs
+  pcl_conversions
 )
 
 #target_compile_options(minimal_comp_node PUBLIC -Wall)
@@ -36,9 +58,18 @@ target_include_directories(minimal_comp_node
     $<INSTALL_INTERFACE:include>
 )
 
+target_include_directories(pointcloud_filter
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
+
+target_link_libraries(pointcloud_filter ${PCL_LIBRARIES})
+
 rclcpp_components_register_nodes(minimal_comp_node "minimal_comp::MinimalCompNode1")
 
-
+rclcpp_components_register_nodes(pointcloud_filter "pointcloud_filter::FilterNode")
 
 install(
   DIRECTORY include/
@@ -51,6 +82,20 @@ install(TARGETS
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
   INCLUDES DESTINATION include
+)
+
+install(TARGETS
+  pointcloud_filter
+  EXPORT export_${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
+install(
+  DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
 )
 
 
