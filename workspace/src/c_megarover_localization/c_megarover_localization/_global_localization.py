@@ -8,12 +8,18 @@ import time
 
 import open3d as o3d
 import rclpy
+import rclpy.clock
+import rclpy.logging
 import ros2_numpy
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose, Point, Quaternion
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import PointCloud2
 import numpy as np
-import tf2_ros
+from tf2_ros import TransformException
+from tf2_ros.buffer import Buffer
+from tf2_ros.transform_listener import TransformListener
+from tf_transformations import quaternion_matrix, translation_matrix
+from tf_transformations import translation_from_matrix, quaternion_from_matrix
 
 global_map = None
 initialized = False
@@ -24,8 +30,8 @@ cur_scan = None
 
 def pose_to_mat(pose_msg):
     return np.matmul(
-        tf2_ros.transform_listener.xyz_to_mat44(pose_msg.pose.pose.position),
-        tf2_ros.transform_listener.xyzw_to_mat44(pose_msg.pose.pose.orientation),
+        translation_matrix([pose_msg.pose.pose.position.x, pose_msg.pose.pose.position.y, pose_msg.pose.pose.position.z]),
+        quaternion_matrix([pose_msg.pose.pose.orientation.x, pose_msg.pose.pose.orientation.y, pose_msg.pose.pose.orientation.z, pose_msg.pose.pose.orientation.w]),
     )
 
 
@@ -116,7 +122,7 @@ def global_localization(pose_estimation):
     global global_map, cur_scan, cur_odom, T_map_to_odom
     # 用icp配准
     # print(global_map, cur_scan, T_map_to_odom)
-    rospy.loginfo('Global localization by scan-to-map matching......')
+    rclpy.logging.get_logger().info('Global localization by scan-to-map matching......')
 
     # TODO 这里注意线程安全
     scan_tobe_mapped = copy.copy(cur_scan)
@@ -132,8 +138,8 @@ def global_localization(pose_estimation):
     transformation, fitness = registration_at_scale(scan_tobe_mapped, global_map_in_FOV, initial=transformation,
                                                     scale=1)
     toc = time.time()
-    rospy.loginfo('Time: {}'.format(toc - tic))
-    rospy.loginfo('')
+    rclpy.logging.get_logger().info('Time: {}'.format(toc - tic))
+    rclpy.logging.get_logger().info('')
 
     # 当全局定位成功时才更新map2odom
     if fitness > LOCALIZATION_TH:
@@ -142,17 +148,19 @@ def global_localization(pose_estimation):
 
         # 发布map_to_odom
         map_to_odom = Odometry()
-        xyz = tf.transformations.translation_from_matrix(T_map_to_odom)
-        quat = tf.transformations.quaternion_from_matrix(T_map_to_odom)
+        #xyz = tf.transformations.translation_from_matrix(T_map_to_odom)
+        #quat = tf.transformations.quaternion_from_matrix(T_map_to_odom)
+        xyz = translation_from_matrix(T_map_to_odom)
+        quat = quaternion_from_matrix(T_map_to_odom)
         map_to_odom.pose.pose = Pose(Point(*xyz), Quaternion(*quat))
         map_to_odom.header.stamp = cur_odom.header.stamp
         map_to_odom.header.frame_id = 'map'
         pub_map_to_odom.publish(map_to_odom)
         return True
     else:
-        rospy.logwarn('Not match!!!!')
-        rospy.logwarn('{}'.format(transformation))
-        rospy.logwarn('fitness score:{}'.format(fitness))
+        rclpy.logging.get_logger().warn('Not match!!!!')
+        rclpy.logging.get_logger().warn('{}'.format(transformation))
+        rclpy.logging.get_logger().warn('fitness score:{}'.format(fitness))
         return False
 
 
@@ -171,7 +179,7 @@ def initialize_global_map(pc_msg):
     global_map = o3d.geometry.PointCloud()
     global_map.points = o3d.utility.Vector3dVector(msg_to_array(pc_msg)[:, :3])
     global_map = voxel_down_sample(global_map, MAP_VOXEL_SIZE)
-    rospy.loginfo('Global map received.')
+    rclpy.logging.get_logger().info('Global map received.')
 
 
 def cb_save_cur_odom(odom_msg):
@@ -222,7 +230,7 @@ if __name__ == '__main__':
 
     # The farthest distance(meters) within FOV
     FOV_FAR = 150
-    
+
     rospy.init_node('fast_lio_localization')
     rospy.loginfo('Localization Node Inited...')
 

@@ -12,6 +12,7 @@ git clone --recursive https://github.com/YasuChiba/megarover-ros2.git
 ```
 cd workspace
 colcon build
+colcon build --cmake-args -DBUILD_TESTING=OFF
 source install/setup.sh
 ```
 

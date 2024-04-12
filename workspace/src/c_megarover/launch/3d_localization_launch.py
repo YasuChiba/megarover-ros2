@@ -7,7 +7,16 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, Time
 from launch.substitutions import PathJoinSubstitution, TextSubstitution
 from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+import launch_ros
+import launch
+import launch_ros.actions
+import launch_ros.events
 
+from launch import LaunchDescription
+from launch_ros.actions import LifecycleNode
+from launch_ros.actions import Node
+
+import lifecycle_msgs.msg
 
 launch_args_for_octomap = [
     DeclareLaunchArgument("pointcloud_map_topic", default_value="/pcd_map"),
@@ -48,37 +57,37 @@ def generate_launch_description():
     )
 
     # publish pointcloud from file using pcd_to_pointcloud_node
-    pcd_to_pointcloud_node = Node(
-        package="c_megarover_common",
-        executable="pcd_to_pointcloud_node",
-        output="screen",
-        parameters=[
-            {"file_name": "/home/user/workspace/pcd/sendagi.pcd"},
-            {"tf_frame": "map"},
-            {"publishing_period_ms": 10000},
-        ],
-        remappings=[("/cloud_pcd", LaunchConfiguration("pointcloud_map_topic"))],
-    )
+    #pcd_to_pointcloud_node = Node(
+    #    package="c_megarover_common",
+    #    executable="pcd_to_pointcloud_node",
+    #    output="screen",
+    #    parameters=[
+    #        {"file_name": "/home/user/workspace/pcd/sendagi.pcd"},
+    #        {"tf_frame": "map"},
+    #        {"publishing_period_ms": 10000},
+    #    ],
+    #    remappings=[("/cloud_pcd", LaunchConfiguration("pointcloud_map_topic"))],
+    #)
 
-    octmap_node = Node(
-        package="octomap_server2",
-        executable="octomap_server",
-        output="screen",
-        remappings=[("cloud_in", LaunchConfiguration("pointcloud_map_topic"))],
-        parameters=[
-            {
-                "resolution": LaunchConfiguration("resolution"),
-                "frame_id": LaunchConfiguration("frame_id"),
-                "base_frame_id": LaunchConfiguration("base_frame_id"),
-                "height_map": LaunchConfiguration("height_map"),
-                "colored_map": LaunchConfiguration("colored_map"),
-                "compress_map": LaunchConfiguration("compress_map"),
-                "publish_free_space": LaunchConfiguration("publish_free_space"),
-                "pointcloud_min_z": 0.0,
-                "pointcloud_max_z": 1.0,
-            }
-        ],
-    )
+    #octmap_node = Node(
+    #    package="octomap_server2",
+    #    executable="octomap_server",
+    #    output="screen",
+    #    remappings=[("cloud_in", LaunchConfiguration("pointcloud_map_topic"))],
+    #    parameters=[
+    #        {
+    #            "resolution": LaunchConfiguration("resolution"),
+    #            "frame_id": LaunchConfiguration("frame_id"),
+    #            "base_frame_id": LaunchConfiguration("base_frame_id"),
+    #            "height_map": LaunchConfiguration("height_map"),
+    #            "colored_map": LaunchConfiguration("colored_map"),
+    #            "compress_map": LaunchConfiguration("compress_map"),
+    #            "publish_free_space": LaunchConfiguration("publish_free_space"),
+    #            "pointcloud_min_z": 0.0,
+    #            "pointcloud_max_z": 1.0,
+    #        }
+    #    ],
+    #)
 
     # launch pointcloud_filter_node
     pointcloud_filter_node = Node(
@@ -91,9 +100,73 @@ def generate_launch_description():
         ],
     )
 
+
+    pcl_localization_node = launch_ros.actions.LifecycleNode(
+        name='pcl_localization',
+        namespace='',
+        package='pcl_localization_ros2',
+        executable='pcl_localization_node',
+        parameters=[PathJoinSubstitution([config_dir_path, "3dlocalization.yaml"])],
+        remappings=[
+            ('/velodyne_points','/livox/filtered_lidar'),
+            ("/map", LaunchConfiguration("pointcloud_map_topic")),
+            ("/odom", "/odom"),
+            ("/imu", "/livox/imu")
+        ],
+        arguments=['--ros-args', '--log-level', 'warn'],
+        output='screen'
+    )
+
+    to_inactive = launch.actions.EmitEvent(
+        event=launch_ros.events.lifecycle.ChangeState(
+            lifecycle_node_matcher=launch.events.matches_action(pcl_localization_node),
+            transition_id=lifecycle_msgs.msg.Transition.TRANSITION_CONFIGURE,
+        )
+    )
+
+    from_unconfigured_to_inactive = launch.actions.RegisterEventHandler(
+        launch_ros.event_handlers.OnStateTransition(
+            target_lifecycle_node=pcl_localization_node,
+            goal_state='unconfigured',
+            entities=[
+                launch.actions.LogInfo(msg="-- Unconfigured --"),
+                launch.actions.EmitEvent(event=launch_ros.events.lifecycle.ChangeState(
+                    lifecycle_node_matcher=launch.events.matches_action(pcl_localization_node),
+                    transition_id=lifecycle_msgs.msg.Transition.TRANSITION_CONFIGURE,
+                )),
+            ],
+        )
+    )
+
+    from_inactive_to_active = launch.actions.RegisterEventHandler(
+        launch_ros.event_handlers.OnStateTransition(
+            target_lifecycle_node=pcl_localization_node,
+            start_state = 'configuring',
+            goal_state='inactive',
+            entities=[
+                launch.actions.LogInfo(msg="-- Inactive --"),
+                launch.actions.EmitEvent(event=launch_ros.events.lifecycle.ChangeState(
+                    lifecycle_node_matcher=launch.events.matches_action(pcl_localization_node),
+                    transition_id=lifecycle_msgs.msg.Transition.TRANSITION_ACTIVATE,
+                )),
+            ],
+        )
+    )
+
+    pcl_localization = TimerAction(
+        period=5.0,
+        actions=[
+            from_unconfigured_to_inactive,
+            from_inactive_to_active,
+            pcl_localization_node,
+            to_inactive,
+        ]
+    )
+
+
     # delay 3 sec to wait for robot to be ready
     rviz_node = TimerAction(
-        period=1.0,
+        period=0.0,
         actions=[
             Node(
                 package="rviz2",
@@ -117,9 +190,10 @@ def generate_launch_description():
             declare_rviz_cmd,
             declare_simulator_cmd,
             robot_launch,
-            pcd_to_pointcloud_node,
-            octmap_node,
+            #pcd_to_pointcloud_node,
+            #octmap_node,
             pointcloud_filter_node,
+            pcl_localization,
             rviz_node,
         ]
     )
