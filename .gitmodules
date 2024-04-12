@@ -23,3 +23,10 @@
 	path = workspace/src/thirdparty/octomap_msgs
 	url = https://github.com/OctoMap/octomap_msgs.git
 	branch = ros2
+[submodule "workspace/src/thirdparty/localization/lidar_localization_ros2"]
+	path = workspace/src/thirdparty/localization/lidar_localization_ros2
+	url = https://github.com/rsasaki0109/lidar_localization_ros2.git
+[submodule "workspace/src/thirdparty/localization/ndt_omp_ros2"]
+	path = workspace/src/thirdparty/localization/ndt_omp_ros2
+	url = https://github.com/rsasaki0109/ndt_omp_ros2.git
+	branch = humble
