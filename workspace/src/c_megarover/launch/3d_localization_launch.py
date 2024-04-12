@@ -102,10 +102,10 @@ def generate_launch_description():
 
 
     pcl_localization_node = launch_ros.actions.LifecycleNode(
-        name='pcl_localization',
+        name='lidar_localization',
         namespace='',
-        package='pcl_localization_ros2',
-        executable='pcl_localization_node',
+        package='lidar_localization_ros2',
+        executable='lidar_localization_node',
         parameters=[PathJoinSubstitution([config_dir_path, "3dlocalization.yaml"])],
         remappings=[
             ('/velodyne_points','/livox/filtered_lidar'),
