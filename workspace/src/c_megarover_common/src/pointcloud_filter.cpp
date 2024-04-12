@@ -30,7 +30,7 @@ void PointCloudFilter::pcl_callback(const sensor_msgs::msg::PointCloud2::SharedP
   pass.setInputCloud(cloud);
   pass.setFilterFieldName("x"); // x axis
   // extract point cloud between 1.0 and 3.0 m
-  pass.setFilterLimits(-0.6, 100.0);
+  pass.setFilterLimits(0.0, 100.0);
   // pass.setFilterLimitsNegative (true);   // extract range reverse
   pass.filter(*cloud_filtered);
 
@@ -61,12 +61,12 @@ void PointCloudFilter::pcl_callback(const sensor_msgs::msg::PointCloud2::SharedP
   // pcl::fromPCLPointCloud2(*cloud_filtered_blob, *cloud_filtered);
 
   // // Statistical Outlier Removal
-  pcl::StatisticalOutlierRemoval<LivoxPointXyzitlt> sor;
-  sor.setInputCloud(cloud_filtered);
-  sor.setMeanK(50);
-  sor.setStddevMulThresh(1.0);
-  sor.setNegative(false);
-  sor.filter(*cloud_filtered);
+  //pcl::StatisticalOutlierRemoval<LivoxPointXyzitlt> sor;
+  //sor.setInputCloud(cloud_filtered);
+  //sor.setMeanK(50);
+  //sor.setStddevMulThresh(1.0);
+  //sor.setNegative(false);
+  //sor.filter(*cloud_filtered);
 
   // // Radius Outlier Removal
   pcl::RadiusOutlierRemoval<LivoxPointXyzitlt> outrem;
