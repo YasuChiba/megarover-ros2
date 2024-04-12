@@ -21,6 +21,20 @@ rclcpp_components_register_node(livox_to_pointcloud2
   EXECUTABLE livox_to_pointcloud2_node)
 
 
+ament_auto_add_library(pointcloud_to_pcd SHARED
+src/pointcloud_to_pcd.cpp)
+rclcpp_components_register_node(pointcloud_to_pcd 
+PLUGIN "PointCloudToPCD"
+EXECUTABLE pointcloud_to_pcd_node)
+
+
+ament_auto_add_library(pcd_to_pointcloud SHARED
+src/pcd_to_pointcloud.cpp)
+rclcpp_components_register_node(pcd_to_pointcloud 
+PLUGIN "PCDPublisher"
+EXECUTABLE pcd_to_pointcloud_node)
+
+
 ament_auto_package(
   INSTALL_TO_SHARE
     launch
