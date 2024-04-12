@@ -30,7 +30,7 @@ void PointCloudFilter::pcl_callback(const sensor_msgs::msg::PointCloud2::SharedP
   pass.setInputCloud(cloud);
   pass.setFilterFieldName("x"); // x axis
   // extract point cloud between 1.0 and 3.0 m
-  pass.setFilterLimits(0.0, 100.0);
+  pass.setFilterLimits(-0.6, 100.0);
   // pass.setFilterLimitsNegative (true);   // extract range reverse
   pass.filter(*cloud_filtered);
 

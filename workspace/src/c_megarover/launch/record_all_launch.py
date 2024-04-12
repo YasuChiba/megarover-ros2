@@ -3,7 +3,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node, SetRemap
 import launch
-from launch.actions import DeclareLaunchArgument, GroupAction
+from launch.actions import DeclareLaunchArgument, GroupAction, TimerAction
 from launch.conditions import IfCondition, UnlessCondition
 from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable
 from launch.launch_description_sources import PythonLaunchDescriptionSource
@@ -19,16 +19,18 @@ def generate_launch_description():
     launch_dir_path = os.path.join(package_path, "launch")
 
     rviz_use = LaunchConfiguration("rviz", default=True)
-    use_simulator = LaunchConfiguration('simulator', default=False) # using simulator or rosbag to publish lidar data
+    use_simulator = LaunchConfiguration(
+        "simulator", default=False
+    )  # using simulator or rosbag to publish lidar data
 
     declare_rviz_cmd = DeclareLaunchArgument(
-        "rviz", default_value="true",
-        description="Use RViz to monitor results"
+        "rviz", default_value="true", description="Use RViz to monitor results"
     )
 
     declare_simulator_cmd = DeclareLaunchArgument(
-        "simulator", default_value="false",
-        description="Use Simulator/rosbag and do not use Livox LiDARs"
+        "simulator",
+        default_value="false",
+        description="Use Simulator/rosbag and do not use Livox LiDARs",
     )
 
     # launch lidar_launch.py
@@ -36,37 +38,37 @@ def generate_launch_description():
         PythonLaunchDescriptionSource([launch_dir_path, "/lidar_launch.py"]),
         launch_arguments={
             "xfer_format": "0",
-            "lidar_config_path": os.path.join(config_dir_path, "MID360_config.json")
+            "lidar_config_path": os.path.join(config_dir_path, "MID360_config.json"),
         }.items(),
-        condition=UnlessCondition(use_simulator)
+        condition=UnlessCondition(use_simulator),
     )
 
     # launch robot_launch.py
     robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([launch_dir_path, "/robot_launch.py"]),
-        launch_arguments={
-            "simulator": use_simulator
-        }.items()
+        launch_arguments={"simulator": use_simulator}.items(),
     )
 
-    rviz_node = Node(
-        package="rviz2",
-        executable="rviz2",
-        condition=IfCondition(rviz_use),
-        arguments=[
-            "-d",
-            os.path.join(
-                get_package_share_directory("c_megarover"), "config", "3dslam.rviz"
-            ),
+    # delay 3 sec to wait for robot to be ready
+    rviz_node = TimerAction(
+        period=3.0,
+        actions=[
+            Node(
+                package="rviz2",
+                executable="rviz2",
+                condition=IfCondition(rviz_use),
+                arguments=[
+                    "-d",
+                    os.path.join(
+                        get_package_share_directory("c_megarover"),
+                        "rviz",
+                        "record_all.rviz",
+                    ),
+                ],
+            )
         ],
     )
 
     return LaunchDescription(
-        [
-            declare_rviz_cmd,
-            declare_simulator_cmd,
-            robot_launch,
-            lidar_launch,
-            rviz_node
-        ]
+        [declare_rviz_cmd, declare_simulator_cmd, robot_launch, lidar_launch, rviz_node]
     )

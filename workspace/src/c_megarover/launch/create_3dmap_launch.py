@@ -65,6 +65,9 @@ def generate_launch_description():
             PathJoinSubstitution([config_dir_path, "3dslam_config.yaml"]),
             {"use_sim_time": use_sim_time},
         ],
+        remappings=[
+            ("/Odometry", "/fastlio_odom"),
+        ]
     )
 
     rviz_node = Node(
