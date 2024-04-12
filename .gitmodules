@@ -16,3 +16,10 @@
 [submodule "workspace/src/thirdparty/megarover3_ros2"]
 	path = workspace/src/thirdparty/megarover3_ros2
 	url = https://github.com/vstoneofficial/megarover3_ros2.git
+[submodule "workspace/src/thirdparty/octomap_server2"]
+	path = workspace/src/thirdparty/octomap_server2
+	url = https://github.com/iKrishneel/octomap_server2.git
+[submodule "workspace/src/thirdparty/octomap_msgs"]
+	path = workspace/src/thirdparty/octomap_msgs
+	url = https://github.com/OctoMap/octomap_msgs.git
+	branch = ros2
