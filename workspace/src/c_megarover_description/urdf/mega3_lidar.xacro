@@ -29,7 +29,7 @@
     <joint name="lidar_joint" type="fixed">
         <parent link="base_link" />
         <child link="livox_frame" />
-        <origin xyz="0 0.1 0.2" rpy="0 0 0" />
+        <origin xyz="0.15 0 0.2" rpy="0 0 0" />
     </joint>
 
 
@@ -38,7 +38,7 @@
     <joint name="camera_init_joint" type="fixed">
         <parent link="base_link" />
         <child link="camera_init" />
-        <origin xyz="0 0.1 0.2" rpy="0 0 0" />
+        <origin xyz="0.15 0 0.2" rpy="0 0 0" />
     </joint>
     
 
