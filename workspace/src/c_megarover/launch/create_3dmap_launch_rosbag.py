@@ -15,7 +15,7 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration("use_sim_time", default=False)
     rviz_use = LaunchConfiguration("rviz", default=True)
-    use_simulator = LaunchConfiguration('simulator', default=False) # using simulator or rosbag to publish lidar data
+    use_simulator = LaunchConfiguration('simulator', default=True) # using simulator or rosbag to publish lidar data
 
     declare_rviz_cmd = DeclareLaunchArgument(
         "rviz", default_value="true",
@@ -23,18 +23,16 @@ def generate_launch_description():
     )
 
     declare_simulator_cmd = DeclareLaunchArgument(
-        "simulator", default_value="false",
+        "simulator", default_value="true",
         description="Use Simulator/rosbag and do not use Livox LiDARs"
     )
 
-    # launch lidar_launch.py
-    lidar_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([launch_dir_path, "/lidar_launch.py"]),
-        launch_arguments={
-            "xfer_format": "0",
-            "lidar_config_path": os.path.join(config_dir_path, "MID360_config.json")
-        }.items(),
-        condition=UnlessCondition(use_simulator)
+    # add static_transform_publisher.
+    static_transform_publisher = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments=['0', '0', '0', '0', '0', '0', 'body', 'base_footprint'],
+        output='screen'
     )
 
     # launch robot_launch.py
@@ -44,6 +42,7 @@ def generate_launch_description():
             "simulator": use_simulator
         }.items()
     )
+
 
     # launch pointcloud_filter_node
     pointcloud_filter_node = Node(
@@ -66,13 +65,13 @@ def generate_launch_description():
             {"use_sim_time": use_sim_time},
         ],
         remappings=[
-           # ("/Odometry", "/fastlio_odom"),
+            ("/Odometry", "/fastlio_odom"),
         ]
     )
 
     # delay 3 sec to wait for robot to be ready
     rviz_node = TimerAction(
-        period=3.0,
+        period=1.0,
         actions=[
             Node(
                 package="rviz2",
@@ -95,7 +94,7 @@ def generate_launch_description():
             declare_rviz_cmd,
             declare_simulator_cmd,
             robot_launch,
-            lidar_launch,
+            static_transform_publisher,
             pointcloud_filter_node,
             fast_lio_node,
             rviz_node

@@ -32,14 +32,14 @@
         <origin xyz="0.15 0 0.2" rpy="0 0 0" />
     </joint>
 
-
-    <!-- For FAST_LIO -->
+    <!--
     <link name="camera_init" />
     <joint name="camera_init_joint" type="fixed">
         <parent link="base_link" />
         <child link="camera_init" />
         <origin xyz="0.15 0 0.2" rpy="0 0 0" />
     </joint>
+    -->
     
 
 </robot>
