@@ -14,6 +14,7 @@ cd workspace
 colcon build
 colcon build --cmake-args -DBUILD_TESTING=OFF
 source install/setup.sh
+pip3 install transforms3d
 ```
 
 2. run

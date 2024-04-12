@@ -21,6 +21,8 @@ setup(
     entry_points={
         'console_scripts': [
             'talker = c_megarover_localization.minimal_publisher:main',
+            "global_localization = c_megarover_localization.global_localization:main",
+            "transform_fusion = c_megarover_localization.transform_fusion:main",
         ],
     },
 )
