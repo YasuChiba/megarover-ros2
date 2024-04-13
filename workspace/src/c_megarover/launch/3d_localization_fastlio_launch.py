@@ -50,6 +50,33 @@ def generate_launch_description():
         description="Use Simulator/rosbag and do not use Livox LiDARs",
     )
 
+    # add static_transform_publisher.
+    static_transform_publisher = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments=['0', '0', '0', '0', '0', '0', 'base_footprint', 'livox_frame'],
+        parameters=[{'use_sim_time': use_sim_time}],
+        output='screen'
+    )
+
+    # add static_transform_publisher.
+    static_transform_publisher2 = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments=['0', '0', '0', '0', '0', '0', 'map', 'odom'],
+        parameters=[{'use_sim_time': use_sim_time}],
+        output='screen'
+    )
+
+     # add static_transform_publisher.
+    static_transform_publisher3 = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        arguments=['0', '0', '0', '0', '0', '0', 'odom', 'base_footprint'],
+        parameters=[{'use_sim_time': use_sim_time}],
+        output='screen'
+    )
+
     # launch robot_launch.py
     robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([launch_dir_path, "/robot_launch.py"]),
@@ -116,6 +143,9 @@ def generate_launch_description():
                 package="rviz2",
                 executable="rviz2",
                 condition=IfCondition(rviz_use),
+                parameters=[
+                    {"use_sim_time": use_sim_time},
+                ],
                 arguments=[
                     "-d",
                     os.path.join(
@@ -133,7 +163,10 @@ def generate_launch_description():
         + [
             declare_rviz_cmd,
             declare_simulator_cmd,
-            robot_launch,
+            static_transform_publisher,
+            #static_transform_publisher2,
+            #static_transform_publisher3,
+            #robot_launch,
             pointcloud_filter_node,
             fast_lio_node,
             global_localization_node,
