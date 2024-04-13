@@ -48,6 +48,7 @@ RUN sudo apt update && sudo apt install -y vim ros-humble-slam-toolbox \
                                             ros-humble-joint-state-publisher ros-humble-joint-state-publisher-gui \
                                             ros-humble-nav2-bringup
 RUN sudo apt update && sudo apt install -y python3-open3d ros-humble-tf-transformations
+RUN pip install ros2-numpy transforms3d
 
 RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
 RUN echo "source /home/user/ws_livox/install/setup.bash" >> ~/.bashrc

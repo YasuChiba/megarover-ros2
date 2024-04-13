@@ -1,7 +1,10 @@
 
-modified.
-https://github.com/hku-mars/FAST_LIO  
-`19f2212d16c4ec77e160fe81c3af0d3ea931196a`  
+modified.  
+https://github.com/hku-mars/FAST_LIO/commit/19f2212d16c4ec77e160fe81c3af0d3ea931196a  
+
+- camera_init frame -> odom frame
+- body frame -> base_link frame
+- added timestamp to TF(odom->base_link)
 
 
 ========
