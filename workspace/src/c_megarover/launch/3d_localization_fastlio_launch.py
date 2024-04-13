@@ -63,19 +63,11 @@ def generate_launch_description():
     static_transform_publisher2 = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        arguments=['0', '0', '0', '0', '0', '0', 'map', 'odom'],
+        arguments=['0', '0', '0', '0', '0', '0', 'body', 'livox_frame'],
         parameters=[{'use_sim_time': use_sim_time}],
         output='screen'
     )
 
-     # add static_transform_publisher.
-    static_transform_publisher3 = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        arguments=['0', '0', '0', '0', '0', '0', 'odom', 'base_footprint'],
-        parameters=[{'use_sim_time': use_sim_time}],
-        output='screen'
-    )
 
     # launch robot_launch.py
     robot_launch = IncludeLaunchDescription(
@@ -164,7 +156,7 @@ def generate_launch_description():
             declare_rviz_cmd,
             declare_simulator_cmd,
             static_transform_publisher,
-            #static_transform_publisher2,
+            static_transform_publisher2,
             #static_transform_publisher3,
             #robot_launch,
             pointcloud_filter_node,
