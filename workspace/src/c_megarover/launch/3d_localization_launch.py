@@ -53,21 +53,24 @@ def generate_launch_description():
     # launch robot_launch.py
     robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([launch_dir_path, "/robot_launch.py"]),
-        launch_arguments={"simulator": use_simulator}.items(),
+        launch_arguments={
+            "simulator": use_simulator,
+            "use_robot_odom": "false",
+        }.items(),
     )
 
     # publish pointcloud from file using pcd_to_pointcloud_node
-    #pcd_to_pointcloud_node = Node(
-    #    package="c_megarover_common",
-    #    executable="pcd_to_pointcloud_node",
-    #    output="screen",
-    #    parameters=[
-    #        {"file_name": "/home/user/workspace/pcd/sendagi.pcd"},
-    #        {"tf_frame": "map"},
-    #        {"publishing_period_ms": 10000},
-    #    ],
-    #    remappings=[("/cloud_pcd", LaunchConfiguration("pointcloud_map_topic"))],
-    #)
+    pcd_to_pointcloud_node = Node(
+        package="c_megarover_common",
+        executable="pcd_to_pointcloud_node",
+        output="screen",
+        parameters=[
+            {"file_name": "/home/user/workspace/pcd/sendagi.pcd"},
+            {"tf_frame": "map"},
+            {"publishing_period_ms": 10000},
+        ],
+        remappings=[("/cloud_pcd", LaunchConfiguration("pointcloud_map_topic"))],
+    )
 
     #octmap_node = Node(
     #    package="octomap_server2",
@@ -108,7 +111,7 @@ def generate_launch_description():
         executable='lidar_localization_node',
         parameters=[PathJoinSubstitution([config_dir_path, "3dlocalization.yaml"])],
         remappings=[
-            ('/velodyne_points','/livox/filtered_lidar'),
+            ('/velodyne_points','/livox/lidar'),
             ("/map", LaunchConfiguration("pointcloud_map_topic")),
             ("/odom", "/odom"),
             ("/imu", "/livox/imu")
@@ -154,7 +157,7 @@ def generate_launch_description():
     )
 
     pcl_localization = TimerAction(
-        period=5.0,
+        period=6.0,
         actions=[
             from_unconfigured_to_inactive,
             from_inactive_to_active,
@@ -163,6 +166,15 @@ def generate_launch_description():
         ]
     )
 
+    # launch lidar_launch.py
+    lidar_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([launch_dir_path, "/lidar_launch.py"]),
+        launch_arguments={
+            "xfer_format": "0",
+            "lidar_config_path": os.path.join(config_dir_path, "MID360_config.json"),
+        }.items(),
+        condition=UnlessCondition(use_simulator),
+    )
 
     # delay 3 sec to wait for robot to be ready
     rviz_node = TimerAction(
@@ -190,7 +202,8 @@ def generate_launch_description():
             declare_rviz_cmd,
             declare_simulator_cmd,
             robot_launch,
-            #pcd_to_pointcloud_node,
+            lidar_launch,
+            pcd_to_pointcloud_node,
             #octmap_node,
             pointcloud_filter_node,
             pcl_localization,

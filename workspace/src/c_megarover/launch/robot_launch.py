@@ -19,6 +19,7 @@ def generate_launch_description():
     use_simulator = LaunchConfiguration("simulator")
     robot_usb_device = LaunchConfiguration("robot_usb_device", default="/dev/ttyUSB0")
     robot_model_path = LaunchConfiguration("robot_model_path")
+    use_robot_odom = LaunchConfiguration("use_robot_odom", default="true")
 
     declare_simulator_cmd = DeclareLaunchArgument(
         "simulator",
@@ -30,6 +31,12 @@ def generate_launch_description():
         "robot_usb_device",
         default_value="/dev/ttyUSB0",
         description="Robot's USB Device",
+    )
+
+    declare_use_robot_odom_cmd = DeclareLaunchArgument(
+        "use_robot_odom",
+        default_value="true",
+        description="publish Robot's Odometry",
     )
 
     description_package_path = get_package_share_path("c_megarover_description")
@@ -62,7 +69,7 @@ def generate_launch_description():
         package="megarover3_bringup",
         executable="pub_odom",
         name="pub_odom",
-        condition=UnlessCondition(use_simulator),
+        condition=IfCondition(use_robot_odom),
     )
 
     # ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyUSB0 --baudrate 115200
@@ -78,6 +85,7 @@ def generate_launch_description():
         [
             declare_simulator_cmd,
             declare_robot_usb_device_cmd,
+            declare_use_robot_odom_cmd,
             declare_robot_model_path,
             joint_state_publisher_node,
             robot_state_publisher_node,
