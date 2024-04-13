@@ -10,8 +10,11 @@
         runtime_pos_log_enable: false
         map_file_path: "./test.pcd"
 
+        odom_frame_id: "odom"
+        base_link_frame_id: "base_footprint"
+
         common:
-            lid_topic:  "/livox/lidar"
+            lid_topic:  "/livox/filtered_lidar"
             imu_topic:  "/livox/imu"
             time_sync_en: false         # ONLY turn on when external time synchronization is really not possible
             time_offset_lidar_to_imu: 0.0 # Time offset between lidar and IMU calibrated by other algorithms, e.g. LI-Init (can be found in README).

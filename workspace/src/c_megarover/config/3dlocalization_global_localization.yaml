@@ -6,8 +6,8 @@
     icp/map_voxel_size: 0.1
     icp/scan_voxel_size: 0.1
     icp/freq_localization: 0.5  #hz
-    icp/localization_threshold: 0.95
+    icp/localization_threshold: 0.98
     icp/field_of_view: 3.14
-    icp/field_of_view_far: 100
+    icp/field_of_view_far: 20
     icp/initialpose_iteration: 50
-    icp/executing_iteration: 20
+    icp/executing_iteration: 60

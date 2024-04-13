@@ -107,6 +107,9 @@ class ICPNode(Node):
             'keyframe_scan',
             self.keyframe_callback,
             10)
+        
+        # call pub_map every 5 sec
+        self.pub_map_timer = self.create_timer(5, self.pub_map)
 
 
 
@@ -334,11 +337,8 @@ class ICPNode(Node):
     def convert_ros_pointcloud2_to_o3d(self, ros_point_cloud):
         # Convert ROS PointCloud2 message to numpy array using ros2_numpy
         np_points = rnp.numpify(ros_point_cloud)
-        # Extract XYZ coordinates from the numpy array and create an Open3D point cloud
-        #xyz = np_points[['x', 'y', 'z']].view((np.float32, 3))
-        xyz = np.stack([np_points['x'], np_points['y'], np_points['z']], axis=-1)
-        
-        #xyz = np_points["xyz"]
+        #xyz = np.stack([np_points['x'], np_points['y'], np_points['z']], axis=-1)
+        xyz = np_points["xyz"]
         pcd = o3d.geometry.PointCloud()
         pcd.points = o3d.utility.Vector3dVector(xyz)
         return pcd
