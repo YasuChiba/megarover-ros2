@@ -27,14 +27,6 @@ def generate_launch_description():
         description="Use Simulator/rosbag and do not use Livox LiDARs"
     )
 
-    # add static_transform_publisher.
-    static_transform_publisher = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        arguments=['0', '0', '0', '0', '0', '0', 'body', 'base_footprint'],
-        output='screen'
-    )
-
     # launch robot_launch.py
     robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([launch_dir_path, "/robot_launch.py"]),
@@ -94,7 +86,6 @@ def generate_launch_description():
             declare_rviz_cmd,
             declare_simulator_cmd,
             robot_launch,
-            static_transform_publisher,
             pointcloud_filter_node,
             fast_lio_node,
             rviz_node

@@ -10,6 +10,9 @@
         runtime_pos_log_enable: false
         map_file_path: "./test.pcd"
 
+        odom_frame_id: "odom"
+        base_link_frame_id: "base_footprint"
+
         common:
             lid_topic:  "/livox/filtered_lidar"
             imu_topic:  "/livox/imu"
