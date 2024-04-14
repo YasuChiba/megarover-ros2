@@ -18,16 +18,6 @@ from launch_ros.actions import Node
 
 import lifecycle_msgs.msg
 
-launch_args_for_octomap = [
-    DeclareLaunchArgument("pointcloud_map_topic", default_value="/pcd_map"),
-    DeclareLaunchArgument("resolution", default_value="0.02"),
-    DeclareLaunchArgument("frame_id", default_value="map"),
-    DeclareLaunchArgument("base_frame_id", default_value="base_footprint"),
-    DeclareLaunchArgument("height_map", default_value="True"),
-    DeclareLaunchArgument("colored_map", default_value="False"),
-    DeclareLaunchArgument("compress_map", default_value="True"),
-    DeclareLaunchArgument("publish_free_space", default_value="False"),
-]
 
 def generate_launch_description():
     package_path = get_package_share_directory("c_megarover")
@@ -72,26 +62,6 @@ def generate_launch_description():
         remappings=[("/cloud_pcd", LaunchConfiguration("pointcloud_map_topic"))],
     )
 
-    #octmap_node = Node(
-    #    package="octomap_server2",
-    #    executable="octomap_server",
-    #    output="screen",
-    #    remappings=[("cloud_in", LaunchConfiguration("pointcloud_map_topic"))],
-    #    parameters=[
-    #        {
-    #            "resolution": LaunchConfiguration("resolution"),
-    #            "frame_id": LaunchConfiguration("frame_id"),
-    #            "base_frame_id": LaunchConfiguration("base_frame_id"),
-    #            "height_map": LaunchConfiguration("height_map"),
-    #            "colored_map": LaunchConfiguration("colored_map"),
-    #            "compress_map": LaunchConfiguration("compress_map"),
-    #            "publish_free_space": LaunchConfiguration("publish_free_space"),
-    #            "pointcloud_min_z": 0.0,
-    #            "pointcloud_max_z": 1.0,
-    #        }
-    #    ],
-    #)
-
     # launch pointcloud_filter_node
     pointcloud_filter_node = Node(
         package="c_megarover_common",
@@ -103,21 +73,20 @@ def generate_launch_description():
         ],
     )
 
-
     pcl_localization_node = launch_ros.actions.LifecycleNode(
-        name='lidar_localization',
-        namespace='',
-        package='lidar_localization_ros2',
-        executable='lidar_localization_node',
+        name="lidar_localization",
+        namespace="",
+        package="lidar_localization_ros2",
+        executable="lidar_localization_node",
         parameters=[PathJoinSubstitution([config_dir_path, "3dlocalization.yaml"])],
         remappings=[
-            ('/velodyne_points','/livox/lidar'),
+            ("/velodyne_points", "/livox/lidar"),
             ("/map", LaunchConfiguration("pointcloud_map_topic")),
             ("/odom", "/odom"),
-            ("/imu", "/livox/imu")
+            ("/imu", "/livox/imu"),
         ],
-        arguments=['--ros-args', '--log-level', 'warn'],
-        output='screen'
+        arguments=["--ros-args", "--log-level", "warn"],
+        output="screen",
     )
 
     to_inactive = launch.actions.EmitEvent(
@@ -130,13 +99,17 @@ def generate_launch_description():
     from_unconfigured_to_inactive = launch.actions.RegisterEventHandler(
         launch_ros.event_handlers.OnStateTransition(
             target_lifecycle_node=pcl_localization_node,
-            goal_state='unconfigured',
+            goal_state="unconfigured",
             entities=[
                 launch.actions.LogInfo(msg="-- Unconfigured --"),
-                launch.actions.EmitEvent(event=launch_ros.events.lifecycle.ChangeState(
-                    lifecycle_node_matcher=launch.events.matches_action(pcl_localization_node),
-                    transition_id=lifecycle_msgs.msg.Transition.TRANSITION_CONFIGURE,
-                )),
+                launch.actions.EmitEvent(
+                    event=launch_ros.events.lifecycle.ChangeState(
+                        lifecycle_node_matcher=launch.events.matches_action(
+                            pcl_localization_node
+                        ),
+                        transition_id=lifecycle_msgs.msg.Transition.TRANSITION_CONFIGURE,
+                    )
+                ),
             ],
         )
     )
@@ -144,14 +117,18 @@ def generate_launch_description():
     from_inactive_to_active = launch.actions.RegisterEventHandler(
         launch_ros.event_handlers.OnStateTransition(
             target_lifecycle_node=pcl_localization_node,
-            start_state = 'configuring',
-            goal_state='inactive',
+            start_state="configuring",
+            goal_state="inactive",
             entities=[
                 launch.actions.LogInfo(msg="-- Inactive --"),
-                launch.actions.EmitEvent(event=launch_ros.events.lifecycle.ChangeState(
-                    lifecycle_node_matcher=launch.events.matches_action(pcl_localization_node),
-                    transition_id=lifecycle_msgs.msg.Transition.TRANSITION_ACTIVATE,
-                )),
+                launch.actions.EmitEvent(
+                    event=launch_ros.events.lifecycle.ChangeState(
+                        lifecycle_node_matcher=launch.events.matches_action(
+                            pcl_localization_node
+                        ),
+                        transition_id=lifecycle_msgs.msg.Transition.TRANSITION_ACTIVATE,
+                    )
+                ),
             ],
         )
     )
@@ -163,7 +140,7 @@ def generate_launch_description():
             from_inactive_to_active,
             pcl_localization_node,
             to_inactive,
-        ]
+        ],
     )
 
     # launch lidar_launch.py
@@ -197,14 +174,12 @@ def generate_launch_description():
     )
 
     return LaunchDescription(
-        launch_args_for_octomap
-        + [
+        [
             declare_rviz_cmd,
             declare_simulator_cmd,
             robot_launch,
             lidar_launch,
             pcd_to_pointcloud_node,
-            #octmap_node,
             pointcloud_filter_node,
             pcl_localization,
             rviz_node,

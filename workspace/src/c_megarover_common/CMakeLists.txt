@@ -34,8 +34,10 @@ rclcpp_components_register_node(pcd_to_pointcloud
 PLUGIN "PCDPublisher"
 EXECUTABLE pcd_to_pointcloud_node)
 
+ament_auto_add_executable(pcd_to_occupancygrid_tool
+  src/tools/pcd_to_occupancygrid_tool.cpp)
 
 ament_auto_package(
   INSTALL_TO_SHARE
-    launch
+    launch config
 )
