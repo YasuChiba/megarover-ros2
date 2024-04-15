@@ -311,6 +311,8 @@ class LocalizationNode(Node):
         #if self.initialized:
         #    return
 
+        self.initialized = False
+
         self.initial_pose = pose_with_covariance_stamped_to_mat(pose_msg)
         if self.cur_scan:
             self.initialized = self.initial_global_localization(self.initial_pose)
