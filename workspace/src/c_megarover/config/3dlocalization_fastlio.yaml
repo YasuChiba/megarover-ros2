@@ -42,8 +42,8 @@
                             0., 0., 1.]
 
         publish:
-            path_en: true                # true: publish Path
-            effect_map_en: true         # true: publish Effects
+            path_en: false                # true: publish Path
+            effect_map_en: false         # true: publish Effects
             map_en: false                 # true: publish Map cloud
             scan_publish_en:  true       # false: close all the point cloud output
             dense_publish_en: false      # false: low down the points number in a global-frame point clouds scan.

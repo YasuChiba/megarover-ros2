@@ -167,6 +167,6 @@ def generate_launch_description():
             global_localization_node,
             transform_fusion_node,
             pcd_to_pointcloud_node,
-            #rviz_node,
+            rviz_node,
         ]
     )
