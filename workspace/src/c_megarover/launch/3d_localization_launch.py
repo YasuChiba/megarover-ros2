@@ -19,11 +19,9 @@ def generate_launch_description():
     config_dir_path = os.path.join(package_path, "config")
     launch_dir_path = os.path.join(package_path, "launch")
 
-    use_sim_time = LaunchConfiguration("use_sim_time", default=True)
-    rviz_use = LaunchConfiguration("rviz", default=True)
-    use_simulator = LaunchConfiguration(
-        "simulator", default=True
-    )  # using simulator or rosbag to publish lidar data
+    rviz_use = LaunchConfiguration("rviz")
+    use_simulator = LaunchConfiguration("simulator")
+    map_file_path = LaunchConfiguration("map_file_path")
 
     declare_rviz_cmd = DeclareLaunchArgument(
         "rviz", default_value="true", description="Use RViz to monitor results"
@@ -32,7 +30,13 @@ def generate_launch_description():
     declare_simulator_cmd = DeclareLaunchArgument(
         "simulator",
         default_value="true",
-        description="Use Simulator/rosbag and do not use Livox LiDARs",
+        description="Use Simulator/rosbag and do not use actual Livox LiDARs. it also set to use_sim_time.",
+    )
+
+    declare_map_file_path = DeclareLaunchArgument(
+        name="map_file_path",
+        default_value="",
+        description="path for map file (.pcd)",
     )
 
     # launch robot_launch.py
@@ -61,7 +65,7 @@ def generate_launch_description():
         executable="pcd_to_pointcloud_node",
         output="screen",
         parameters=[
-            {"file_name": "/home/user/workspace/pcd/sendagi.pcd"},
+            {"file_name": map_file_path},
             {"tf_frame": "map"},
             {"publishing_period_ms": 1000},
         ],
@@ -72,10 +76,11 @@ def generate_launch_description():
     fast_lio_node = Node(
         package="fast_lio",
         executable="fastlio_mapping",
+        name="fastlio_mapping",
         output="screen",
         parameters=[
             PathJoinSubstitution([config_dir_path, "3dlocalization.yaml"]),
-            {"use_sim_time": use_sim_time},
+            {"use_sim_time": use_simulator},
         ],
         remappings=[
             ("/Odometry", "/fastlio_odom"),
@@ -85,14 +90,14 @@ def generate_launch_description():
     global_localization_node = Node(
         package="c_megarover_localization",
         executable="global_localization",
+        name="global_localization",
         output="screen",
         parameters=[
-            {"use_sim_time": use_sim_time},
+            PathJoinSubstitution([config_dir_path, "3dlocalization.yaml"]),
+            {"map_file_path": map_file_path},
+            {"use_sim_time": use_simulator},
         ],
         remappings=[
-            # ("/initialpose", "/initialpose"),
-            # ("/lio_odom", "/fastlio_odom"),
-            # ("/keyframe_scan", "/livox/lidar"),
             ("/cloud_registered", "/cloud_registered"),  # sub
             ("/Odometry", "/fastlio_odom"),  # sub
             ("/map", "/global_map"),  # sub
@@ -105,11 +110,13 @@ def generate_launch_description():
     transform_fusion_node = Node(
         package="c_megarover_localization",
         executable="transform_fusion",
+        name="transform_fusion",
         output="screen",
+        parameters=[
+            PathJoinSubstitution([config_dir_path, "3dlocalization.yaml"]),
+            {"use_sim_time": use_simulator},
+        ],
         remappings=[
-            # ("/lio_odom", "/fastlio_odom"),
-            # ("/map_to_odom", "/map_to_odom"),
-            # ("/localization", "/localization"),
             ("/Odometry", "/fastlio_odom"),  # sub
             ("/map_to_odom", "/map_to_odom"),  # sub
             ("/localization", "/localization"),  # pub
@@ -125,7 +132,7 @@ def generate_launch_description():
                 executable="rviz2",
                 condition=IfCondition(rviz_use),
                 parameters=[
-                    {"use_sim_time": use_sim_time},
+                    {"use_sim_time": use_simulator},
                 ],
                 arguments=[
                     "-d",
@@ -143,6 +150,7 @@ def generate_launch_description():
         [
             declare_rviz_cmd,
             declare_simulator_cmd,
+            declare_map_file_path,
             robot_launch,
             pointcloud_filter_node,
             fast_lio_node,

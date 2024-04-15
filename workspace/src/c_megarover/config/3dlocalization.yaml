@@ -1,4 +1,4 @@
-/**:
+fastlio_mapping:
     ros__parameters:
         feature_extract_enable: false
         point_filter_num: 3
@@ -53,3 +53,22 @@
             pcd_save_en: false
             interval: -1                 # how many LiDAR frames saved in each pcd file; 
                                         # -1 : all frames will be saved in ONE pcd file, may lead to memory crash when having too much frames.
+
+
+global_localization:
+    ros__parameters:
+        map_voxel_size: 0.01
+        scan_voxel_size: 0.01
+        localization_threshold: 0.95
+        fov: 3.14
+        fov_far: 10.0
+        freq_localization: 0.5
+        #map_file_path: "./test.pcd"
+        map_frame: "map"
+        odom_frame: "odom"
+
+transform_fusion:
+    ros__parameters:
+        freq_tf_broadcast: 20.0
+        map_frame: "map"
+        odom_frame: "odom"

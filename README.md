@@ -62,6 +62,18 @@ extract -t /Laser_map
 
 
 
+## Localization
+
+1. run
+    ```
+    ros2 launch c_megarover 3d_localization_launch.py simulator:=true rviz:=true map_file_path:=/home/user/workspace/pcd/sendagi.pcd
+
+    ros2 bag play rosbag/rosbag2_2024_04_12-03_10_57/ --topics /livox/lidar /livox/imu --clock
+    ```
+    `--clock` is required when the `simulator:=true`.
+    
+
+
 
 
 
