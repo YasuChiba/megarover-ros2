@@ -15,6 +15,7 @@
 
         common:
             lid_topic:  "/livox/filtered_lidar"
+            #lid_topic:  "/livox/lidar"
             imu_topic:  "/livox/imu"
             time_sync_en: false         # ONLY turn on when external time synchronization is really not possible
             time_offset_lidar_to_imu: 0.0 # Time offset between lidar and IMU calibrated by other algorithms, e.g. LI-Init (can be found in README).
@@ -42,9 +43,9 @@
 
         publish:
             path_en: true                # true: publish Path
-            effect_map_en: false         # true: publish Effects
+            effect_map_en: true         # true: publish Effects
             map_en: false                 # true: publish Map cloud
-            scan_publish_en:  false       # false: close all the point cloud output
+            scan_publish_en:  true       # false: close all the point cloud output
             dense_publish_en: false      # false: low down the points number in a global-frame point clouds scan.
             scan_bodyframe_pub_en: false  # true: output the point cloud scans in IMU-body-frame
 

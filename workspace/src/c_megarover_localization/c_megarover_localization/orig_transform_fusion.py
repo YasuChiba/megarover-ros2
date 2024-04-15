@@ -12,7 +12,8 @@ import tf_transformations
 from geometry_msgs.msg import Pose, Point, Quaternion
 from nav_msgs.msg import Odometry
 import copy
-
+import tf_transformations
+from geometry_msgs.msg import TransformStamped
 
 class TransformFusionNode(Node):
     def __init__(self):
@@ -69,13 +70,31 @@ class TransformFusionNode(Node):
         else:
             T_map_to_odom = np.eye(4)
 
-        self.br.sendTransform(
-            tf_transformations.translation_from_matrix(T_map_to_odom),
-            tf_transformations.quaternion_from_matrix(T_map_to_odom),
-            self.get_clock().now().to_msg(),
-            "odom",
-            "map",
-        )
+        t = TransformStamped()
+        t.header.stamp = self.get_clock().now().to_msg()
+        t.header.frame_id = 'map'
+        t.child_frame_id = 'odom'
+
+        translation = tf_transformations.translation_from_matrix(T_map_to_odom)
+        quaternion = tf_transformations.quaternion_from_matrix(T_map_to_odom)
+
+        t.transform.translation.x = translation[0]
+        t.transform.translation.y = translation[1]
+        t.transform.translation.z = translation[2]
+        t.transform.rotation.x = quaternion[0]
+        t.transform.rotation.y = quaternion[1]
+        t.transform.rotation.z = quaternion[2]
+        t.transform.rotation.w = quaternion[3]
+
+        self.br.sendTransform(t)
+
+        #self.br.sendTransform(
+        #    tf_transformations.translation_from_matrix(T_map_to_odom),
+        #    tf_transformations.quaternion_from_matrix(T_map_to_odom),
+        #    self.get_clock().now().to_msg(),
+        #    "odom",
+        #    "map",
+        #)
 
         if cur_odom is not None:
             localization = Odometry()
@@ -83,10 +102,25 @@ class TransformFusionNode(Node):
             T_map_to_base_link = np.matmul(T_map_to_odom, T_odom_to_base_link)
             xyz = tf_transformations.translation_from_matrix(T_map_to_base_link)
             quat = tf_transformations.quaternion_from_matrix(T_map_to_base_link)
-            localization.pose.pose = Pose(Point(*xyz), Quaternion(*quat))
+            
+            # xyz to Point, quat to Quaternion
+            position = Point()
+            position.x = xyz[0]
+            position.y = xyz[1]
+            position.z = xyz[2]
+            orientation = Quaternion()
+            orientation.x = quat[0]
+            orientation.y = quat[1]
+            orientation.z = quat[2]
+            orientation.w = quat[3]
+            pose = Pose()
+            pose.position = position
+            pose.orientation = orientation
+
+            localization.pose.pose = pose
             localization.twist = cur_odom.twist
             localization.header.stamp = cur_odom.header.stamp
-            localization.header.frame_id = "map"
+            localization.header.frame_id = "odom"
             localization.child_frame_id = "base_footprint"
             self.pub_localization.publish(localization)
 

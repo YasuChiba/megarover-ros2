@@ -8,7 +8,7 @@ import open3d as o3d
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
-from sensor_msgs.msg import PointCloud2
+from sensor_msgs.msg import PointCloud2, PointField
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose, Point, Quaternion
 from nav_msgs.msg import Odometry
 from tf_transformations import (
@@ -28,9 +28,9 @@ import copy
 # cur_scan = None
 
 
-def pose_to_mat(pose_msg):
-    position = pose_msg.pose.position
-    orientation = pose_msg.pose.orientation
+def pose_to_mat(pose_msg: PoseWithCovarianceStamped):
+    position = pose_msg.pose.pose.position
+    orientation = pose_msg.pose.pose.orientation
     return np.matmul(
         translation_matrix([position.x, position.y, position.z]),
         quaternion_matrix([orientation.x, orientation.y, orientation.z, orientation.w]),
@@ -39,11 +39,12 @@ def pose_to_mat(pose_msg):
 
 def msg_to_array(pc_msg):
     pc_array = ros2_numpy.numpify(pc_msg)
-    pc = np.zeros([len(pc_array), 3])
-    pc[:, 0] = pc_array["x"]
-    pc[:, 1] = pc_array["y"]
-    pc[:, 2] = pc_array["z"]
-    return pc
+    #pc = np.zeros([len(pc_array), 3])
+    #pc[:, 0] = pc_array["x"]
+    #pc[:, 1] = pc_array["y"]
+    #pc[:, 2] = pc_array["z"]
+    #return pc
+    return pc_array["xyz"]
 
 
 def inverse_se3(trans):
@@ -68,9 +69,28 @@ def publish_point_cloud(publisher, header, pc):
     data["z"] = pc[:, 2]
     if pc.shape[1] == 4:
         data["intensity"] = pc[:, 3]
-    msg = ros2_numpy.msgify(PointCloud2, data)
-    msg.header = header
-    publisher.publish(msg)
+    
+    # convert data to PointCloud2 without ros2_numpy
+    pc_msg = PointCloud2()
+    pc_msg.header = header
+    pc_msg.height = 1
+    pc_msg.width = len(pc)
+    pc_msg.fields = [
+        PointField(name="x", offset=0, datatype=PointField.FLOAT32, count=1),
+        PointField(name="y", offset=4, datatype=PointField.FLOAT32, count=1),
+        PointField(name="z", offset=8, datatype=PointField.FLOAT32, count=1),
+        PointField(name="intensity", offset=12, datatype=PointField.FLOAT32, count=1),
+    ]
+    pc_msg.is_bigendian = False
+    pc_msg.point_step = 16
+    pc_msg.row_step = 16 * len(pc)
+    pc_msg.is_dense = True
+    pc_msg.data = data.tobytes()
+    publisher.publish(pc_msg)
+
+    #msg = ros2_numpy.msgify(PointCloud2, data)
+    #msg.header = header
+   # publisher.publish(msg)
 
 
 def voxel_down_sample(pcd: o3d.geometry.PointCloud, voxel_size):
@@ -86,22 +106,25 @@ class LocalizationNode(Node):
     def __init__(self):
         super().__init__("fast_lio_localization")
 
-        self.MAP_VOXEL_SIZE = 0.1
-        self.SCAN_VOXEL_SIZE = 0.1
+        self.get_logger().info("LocalizationNode init")
+
+        self.MAP_VOXEL_SIZE = 0.01
+        self.SCAN_VOXEL_SIZE = 0.01
         self.initialized = False
         self.cur_scan: PointCloud2 = None
         self.cur_odom: Odometry = None
         self.T_map_to_odom = np.eye(4)
+        self.global_map:o3d.geometry.PointCloud = None
 
         # The threshold of global localization,
         # only those scan2map-matching with higher fitness than LOCALIZATION_TH will be taken
-        self.LOCALIZATION_TH = 0.95
+        self.LOCALIZATION_TH = 0.7
         # FOV(rad), modify this according to your LiDAR type
-        self.FOV = 1.6
+        self.FOV = 1.57
         # The farthest distance(meters) within FOV
-        self.FOV_FAR = 150
+        self.FOV_FAR = 20
         # Global localization frequency (HZ)
-        self.FREQ_LOCALIZATION = 0.5
+        self.FREQ_LOCALIZATION = 0.1
 
 
         self.pub_pc_in_map = self.create_publisher(PointCloud2, "/cur_scan_in_map", 1)
@@ -123,10 +146,11 @@ class LocalizationNode(Node):
             PointCloud2, "/map", self.cb_globalmap, qos_profile_sensor_data
         )
 
-        while rclpy.ok() and self.global_map is None:
-            time.sleep(1)
+        #while rclpy.ok() and self.global_map is None:
+        #    self.get_logger().info("waiting for global map")
+        #    time.sleep(1)
         # unsubscribe from global map
-        self.map_subscription.destroy()
+        #self.map_subscription.destroy()
 
         #######
         #######
@@ -138,25 +162,43 @@ class LocalizationNode(Node):
             qos_profile_sensor_data,
         )
 
-        while rclpy.ok() and not self.initialized:
-            self.get_logger().info("Waiting for initial pose...")
-            time.sleep(1)
-        self.initial_pose_subscription.destroy()
+        #while rclpy.ok() and not self.initialized:
+        #    self.get_logger().info("Waiting for initial pose...")
+        #    time.sleep(1)
+        #self.initial_pose_subscription.destroy()
 
-
-        self.get_logger().info("")
-        self.get_logger().info("initialize successfully!")
+        #self.get_logger().info("")
+        #self.get_logger().info("initialize successfully!")
 
         
         # call global_localization every 1 second.
-        self.localization_timer = self.create_timer(1/self.FREQ_LOCALIZATION, self.global_localization)
+        self.localization_timer = self.create_timer(1/self.FREQ_LOCALIZATION, lambda: self.global_localization(self.T_map_to_odom))
 
 
     def global_localization(self, pose_estimation):
+        self.get_logger().info("Constant global localization......")
+        if self.global_map is None:
+            self.get_logger().info("waiting for global map")
+            return False
+        
+        if not self.initialized:
+            self.get_logger().info("waiting for initial pose")
+            return False
+        
+        self._global_localization(pose_estimation)
+        
+    def initial_global_localization(self, initial_pose):
+        self.get_logger().info("Initial global localization......")
+        return self._global_localization(initial_pose)
+    
+
+    def _global_localization(self, pose_estimation):
         self.get_logger().info("Global localization by scan-to-map matching......")
 
         if pose_estimation is None:
-            pose_estimation = self.T_map_to_odom
+            #pose_estimation = self.T_map_to_odom
+            self.get_logger().error("pose_estimation is None")
+            raise ValueError("pose_estimation is None")
 
         scan_tobe_mapped = copy.copy(self.cur_scan)
         tic = time.time()
@@ -181,9 +223,25 @@ class LocalizationNode(Node):
             map_to_odom = Odometry()
             xyz = translation_from_matrix(self.T_map_to_odom)
             quat = quaternion_from_matrix(self.T_map_to_odom)
-            map_to_odom.pose.pose = Pose(Point(*xyz), Quaternion(*quat))
+
+            position = Point()
+            position.x = xyz[0]
+            position.y = xyz[1]
+            position.z = xyz[2]
+            orientation = Quaternion()
+            orientation.x = quat[0]
+            orientation.y = quat[1]
+            orientation.z = quat[2]
+            orientation.w = quat[3]
+            pose = Pose()
+            pose.position = position
+            pose.orientation = orientation
+
+            map_to_odom.pose.pose = pose
+            #map_to_odom.pose.pose = Pose(Point(*xyz), Quaternion(*quat))
             map_to_odom.header.stamp = self.cur_odom.header.stamp
             map_to_odom.header.frame_id = 'map'
+            map_to_odom.child_frame_id = 'odom'
             self.pub_map_to_odom.publish(map_to_odom)
             return True
         else:
@@ -192,9 +250,7 @@ class LocalizationNode(Node):
             self.get_logger().warn('fitness score:{}'.format(fitness))
             return False
 
-
-
-        pass
+        
 
     def cb_globalmap(self, pc_msg: PointCloud2):
         if self.global_map is not None:
@@ -208,10 +264,10 @@ class LocalizationNode(Node):
     def cb_initial_pose(self, pose_msg: PoseWithCovarianceStamped):
         if self.initialized:
             return
-
+        
         self.initial_pose = pose_to_mat(pose_msg)
         if self.cur_scan:
-            self.initialized = self.global_localization()
+            self.initialized = self.initial_global_localization(self.initial_pose)
         else:
             self.get_logger().warn("First scan not received!!!!!")
 
@@ -219,6 +275,13 @@ class LocalizationNode(Node):
         self.cur_odom = msg
 
     def cb_save_cur_scan(self, pc_msg: PointCloud2):
+        #self.get_logger().info("Received scan")
+        # log properties of pc_msg.header
+        #self.get_logger().info("header: {}".format(pc_msg.header))
+
+        #self.get_logger().info("height: {}".format(pc_msg.height))
+        #self.get_logger().info("width: {}".format(pc_msg.width))
+
         pc_msg.header.frame_id = "odom"
         pc_msg.header.stamp = self.get_clock().now().to_msg()
         self.pub_pc_in_map.publish(pc_msg)
@@ -236,6 +299,10 @@ class LocalizationNode(Node):
         T_odom_to_base_link = pose_to_mat(self.cur_odom)
         T_map_to_base_link = np.matmul(pose_estimation, T_odom_to_base_link)
         T_base_link_to_map = inverse_se3(T_map_to_base_link)
+
+
+        # log T_odom_to_base_link
+        #self.get_logger().info("T_odom_to_base_link: {}".format(T_odom_to_base_link))
 
         # 把地图转换到lidar系下
         global_map_in_map = np.array(self.global_map.points)
@@ -269,11 +336,20 @@ class LocalizationNode(Node):
 
 
     def registration_at_scale(self, pc_scan, pc_map, initial, scale):
-        result_icp = o3d.registration.registration_icp(
+        #result_icp = o3d.registration.registration_icp(
+        #    voxel_down_sample(pc_scan, self.SCAN_VOXEL_SIZE * scale), voxel_down_sample(pc_map, self.MAP_VOXEL_SIZE * scale),
+        #    1.0 * scale, initial,
+        #    o3d.registration.TransformationEstimationPointToPoint(),
+        #    o3d.registration.ICPConvergenceCriteria(max_iteration=20)
+        #)
+
+        #return result_icp.transformation, result_icp.fitness
+    
+        result_icp = o3d.pipelines.registration.registration_icp(
             voxel_down_sample(pc_scan, self.SCAN_VOXEL_SIZE * scale), voxel_down_sample(pc_map, self.MAP_VOXEL_SIZE * scale),
             1.0 * scale, initial,
-            o3d.registration.TransformationEstimationPointToPoint(),
-            o3d.registration.ICPConvergenceCriteria(max_iteration=20)
+            o3d.pipelines.registration.TransformationEstimationPointToPoint(),
+            o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=20)
         )
 
         return result_icp.transformation, result_icp.fitness

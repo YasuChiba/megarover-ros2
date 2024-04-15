@@ -34,7 +34,7 @@ def generate_launch_description():
     config_dir_path = os.path.join(package_path, "config")
     launch_dir_path = os.path.join(package_path, "launch")
 
-    use_sim_time = LaunchConfiguration("use_sim_time", default=False)
+    use_sim_time = LaunchConfiguration("use_sim_time", default=True)
     rviz_use = LaunchConfiguration("rviz", default=True)
     use_simulator = LaunchConfiguration(
         "simulator", default=True
@@ -53,7 +53,10 @@ def generate_launch_description():
     # launch robot_launch.py
     robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([launch_dir_path, "/robot_launch.py"]),
-        launch_arguments={"simulator": use_simulator}.items(),
+        launch_arguments={
+            "simulator": use_simulator,
+            "use_robot_odom": "false",
+        }.items(),
     )
 
     # launch pointcloud_filter_node
@@ -65,6 +68,19 @@ def generate_launch_description():
             ("/in_cloud", "/livox/lidar"),
             ("/out_cloud", "/livox/filtered_lidar"),
         ],
+    )
+
+    # publish pointcloud from file using pcd_to_pointcloud_node
+    pcd_to_pointcloud_node = Node(
+        package="c_megarover_common",
+        executable="pcd_to_pointcloud_node",
+        output="screen",
+        parameters=[
+            {"file_name": "/home/user/workspace/pcd/sendagi.pcd"},
+            {"tf_frame": "map"},
+            {"publishing_period_ms": 1000},
+        ],
+        remappings=[("/cloud_pcd", "/global_map")],
     )
 
     # launch fast_lio node.`
@@ -90,9 +106,15 @@ def generate_launch_description():
             {"use_sim_time": use_sim_time},
         ],
         remappings=[
-            ("/initialpose", "/initialpose"),
-            ("/lio_odom", "/fastlio_odom"),
-            ("/keyframe_scan", "/livox/lidar"),
+            #("/initialpose", "/initialpose"),
+            #("/lio_odom", "/fastlio_odom"),
+            #("/keyframe_scan", "/livox/lidar"),
+            ("/cloud_registered", "/cloud_registered"), #sub
+            ("/Odometry", "/fastlio_odom"), # sub
+            ("/map", "/global_map"), # sub
+            ("/cur_scan_in_map", "/cur_scan_in_map"), #pub
+            ("/submap", "/submap"), # pub
+            ("/map_to_odom", "/map_to_odom") #pub
         ]
     )
 
@@ -101,9 +123,12 @@ def generate_launch_description():
         executable="orig_transform_fusion",
         output="screen",
         remappings=[
-            ("/lio_odom", "/fastlio_odom"),
-            ("/map_to_odom", "/map_to_odom"),
-            ("/localization", "/localization"),
+            #("/lio_odom", "/fastlio_odom"),
+            #("/map_to_odom", "/map_to_odom"),
+            #("/localization", "/localization"),
+            ("/Odometry", "/fastlio_odom"), # sub
+            ("/map_to_odom", "/map_to_odom"), # sub
+            ("/localization", "/localization"), # pub
         ]
     )
 
@@ -141,6 +166,7 @@ def generate_launch_description():
             fast_lio_node,
             global_localization_node,
             transform_fusion_node,
-            rviz_node,
+            pcd_to_pointcloud_node,
+            #rviz_node,
         ]
     )

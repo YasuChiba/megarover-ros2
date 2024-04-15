@@ -22,7 +22,9 @@ setup(
         'console_scripts': [
             'talker = c_megarover_localization.minimal_publisher:main',
             "global_localization = c_megarover_localization.global_localization:main",
+            "orig_global_localization = c_megarover_localization.orig_global_localization:main",
             "transform_fusion = c_megarover_localization.transform_fusion:main",
+            "orig_transform_fusion = c_megarover_localization.orig_transform_fusion:main",
         ],
     },
 )
