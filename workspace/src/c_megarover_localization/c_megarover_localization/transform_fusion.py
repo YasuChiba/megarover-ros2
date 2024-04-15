@@ -69,7 +69,6 @@ class TransformFusionNode(Node):
         self.cur_map_to_odom = None
 
         self.br = TransformBroadcaster(self)
-        self.declare_parameter("freq_pub_localization", 50)
 
         self.sub_odometry = self.create_subscription(
             Odometry, "/Odometry", self.cb_save_cur_odom, 1
@@ -77,8 +76,6 @@ class TransformFusionNode(Node):
         self.sub_map_to_odom = self.create_subscription(
             Odometry, "/map_to_odom", self.cb_save_map_to_odom, 1
         )
-
-        self.pub_localization = self.create_publisher(Odometry, "/localization", 1)
 
         self.localization_timer = self.create_timer(
             1 / self.FREQ_TF_BROADCAST, self.transform_fusion

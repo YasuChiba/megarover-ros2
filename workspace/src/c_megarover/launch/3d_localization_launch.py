@@ -100,7 +100,6 @@ def generate_launch_description():
         remappings=[
             ("/cloud_registered", "/cloud_registered"),  # sub
             ("/Odometry", "/fastlio_odom"),  # sub
-            ("/map", "/global_map"),  # sub
             ("/cur_scan_in_map", "/cur_scan_in_map"),  # pub
             ("/submap", "/submap"),  # pub
             ("/map_to_odom", "/map_to_odom"),  # pub

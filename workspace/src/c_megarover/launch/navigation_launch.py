@@ -2,7 +2,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node
+from launch_ros.actions import Node, SetRemap
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.substitutions import PathJoinSubstitution, TextSubstitution
 from launch.conditions import IfCondition, UnlessCondition
@@ -21,20 +21,9 @@ from launch.actions import (
     IncludeLaunchDescription,
     SetEnvironmentVariable,
 )
-from launch_ros.actions import PushROSNamespace
+from launch_ros.actions import PushRosNamespace
 from launch_ros.descriptions import ParameterFile
 from nav2_common.launch import ReplaceString, RewrittenYaml
-
-launch_args_for_octomap = [
-    DeclareLaunchArgument("pointcloud_map_topic", default_value="/pcd_map"),
-    DeclareLaunchArgument("resolution", default_value="0.02"),
-    DeclareLaunchArgument("frame_id", default_value="map"),
-    DeclareLaunchArgument("base_frame_id", default_value="base_footprint"),
-    DeclareLaunchArgument("height_map", default_value="True"),
-    DeclareLaunchArgument("colored_map", default_value="False"),
-    DeclareLaunchArgument("compress_map", default_value="True"),
-    DeclareLaunchArgument("publish_free_space", default_value="False"),
-]
 
 
 def generate_launch_description():
@@ -42,11 +31,13 @@ def generate_launch_description():
     config_dir_path = os.path.join(package_path, "config")
     launch_dir_path = os.path.join(package_path, "launch")
 
-    use_sim_time = LaunchConfiguration("use_sim_time", default=False)
     rviz_use = LaunchConfiguration("rviz", default=True)
     use_simulator = LaunchConfiguration(
-        "simulator", default=True
+        "simulator", default=False
     )  # using simulator or rosbag to publish lidar data
+
+    map_file_path = LaunchConfiguration("map_file_path")
+    map_2d_file_path = LaunchConfiguration("map_2d_file_path")
 
     declare_rviz_cmd = DeclareLaunchArgument(
         "rviz", default_value="true", description="Use RViz to monitor results"
@@ -55,79 +46,75 @@ def generate_launch_description():
     declare_simulator_cmd = DeclareLaunchArgument(
         "simulator",
         default_value="true",
-        description="Use Simulator/rosbag and do not use Livox LiDARs",
+        description="Use Simulator/rosbag and do not use actual Livox LiDARs. it also set to use_sim_time.",
     )
 
-    octmap_node = Node(
-        package="octomap_server2",
-        executable="octomap_server",
-        output="screen",
-        remappings=[
-            ("cloud_in", LaunchConfiguration("pointcloud_map_topic")),
-            ("projected_map", "projected_map"),
-        ],
-        parameters=[
-            {
-                "resolution": LaunchConfiguration("resolution"),
-                "frame_id": LaunchConfiguration("frame_id"),
-                "base_frame_id": LaunchConfiguration("base_frame_id"),
-                "height_map": LaunchConfiguration("height_map"),
-                "colored_map": LaunchConfiguration("colored_map"),
-                "compress_map": LaunchConfiguration("compress_map"),
-                "publish_free_space": LaunchConfiguration("publish_free_space"),
-                "pointcloud_min_z": 0.0,
-                "pointcloud_max_z": 1.0,
-            }
-        ],
+    declare_map_file_path = DeclareLaunchArgument(
+        name="map_file_path",
+        default_value="",
+        description="path for map file (.pcd)",
     )
 
+    declare_map_2d_file_path = DeclareLaunchArgument(
+        name="map_2d_file_path",
+        default_value="",
+        description="path for map file (.yaml)",
+    )
 
-    nav2_bringup_dir = get_package_share_directory('nav2_bringup')
-    nav2_bringup_launch_dir = os.path.join(nav2_bringup_dir, 'launch')
+    localization = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([launch_dir_path, "/3d_localization_launch.py"]),
+        launch_arguments={
+            "rviz": "false",
+            "simulator": use_simulator,
+            "map_file_path": map_file_path,
+        }.items(),
+    )
 
-    namespace = LaunchConfiguration('namespace')
-    use_namespace = LaunchConfiguration('use_namespace')
-    use_composition = LaunchConfiguration('use_composition')
-    params_file = LaunchConfiguration('params_file')
-    autostart = LaunchConfiguration('autostart')
-    log_level = LaunchConfiguration('log_level')
-    use_respawn = LaunchConfiguration('use_respawn')
+    nav2_bringup_dir = get_package_share_directory("nav2_bringup")
+    nav2_bringup_launch_dir = os.path.join(nav2_bringup_dir, "launch")
+
+    namespace = LaunchConfiguration("namespace")
+    use_namespace = LaunchConfiguration("use_namespace")
+    use_composition = LaunchConfiguration("use_composition")
+    params_file = LaunchConfiguration("params_file")
+    autostart = LaunchConfiguration("autostart")
+    log_level = LaunchConfiguration("log_level")
+    use_respawn = LaunchConfiguration("use_respawn")
     declare_namespace_cmd = DeclareLaunchArgument(
-        'namespace', default_value='', description='Top-level namespace'
+        "namespace", default_value="", description="Top-level namespace"
     )
     declare_use_namespace_cmd = DeclareLaunchArgument(
-        'use_namespace',
-        default_value='false',
-        description='Whether to apply a namespace to the navigation stack',
+        "use_namespace",
+        default_value="false",
+        description="Whether to apply a namespace to the navigation stack",
     )
     declare_use_composition_cmd = DeclareLaunchArgument(
-        'use_composition',
-        default_value='True',
-        description='Whether to use composed bringup',
+        "use_composition",
+        default_value="True",
+        description="Whether to use composed bringup",
     )
     declare_params_file_cmd = DeclareLaunchArgument(
-        'params_file',
-        default_value=os.path.join(nav2_bringup_dir, 'params', 'nav2_params.yaml'),
-        description='Full path to the ROS2 parameters file to use for all launched nodes',
+        "params_file",
+        default_value=os.path.join(config_dir_path, "nav2.yaml"),
+        description="Full path to the ROS2 parameters file to use for all launched nodes",
     )
     declare_autostart_cmd = DeclareLaunchArgument(
-        'autostart',
-        default_value='true',
-        description='Automatically startup the nav2 stack',
+        "autostart",
+        default_value="true",
+        description="Automatically startup the nav2 stack",
     )
     declare_log_level_cmd = DeclareLaunchArgument(
-        'log_level', default_value='info', description='log level'
+        "log_level", default_value="info", description="log level"
     )
     declare_use_respawn_cmd = DeclareLaunchArgument(
-        'use_respawn',
-        default_value='False',
-        description='Whether to respawn if a node crashes. Applied when composition is disabled.',
+        "use_respawn",
+        default_value="False",
+        description="Whether to respawn if a node crashes. Applied when composition is disabled.",
     )
-
 
     params_file = ReplaceString(
         source_file=params_file,
-        replacements={'<robot_namespace>': ('/', namespace)},
+        replacements={"<robot_namespace>": ("/", namespace)},
         condition=IfCondition(use_namespace),
     )
     configured_params = ParameterFile(
@@ -140,63 +127,103 @@ def generate_launch_description():
         allow_substs=True,
     )
 
+    lifecycle_nodes = ["map_server"]
+
     bringup_cmd_group = GroupAction(
         [
-            PushROSNamespace(condition=IfCondition(use_namespace), namespace=namespace),
+            PushRosNamespace(condition=IfCondition(use_namespace), namespace=namespace),
+            SetRemap(src="/cmd_vel", dst="/rover_twist"),
             Node(
                 condition=IfCondition(use_composition),
-                name='nav2_container',
-                package='rclcpp_components',
-                executable='component_container_isolated',
-                parameters=[configured_params, {'autostart': autostart}],
-                arguments=['--ros-args', '--log-level', log_level],
-                remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')],
-                output='screen',
+                name="nav2_container",
+                package="rclcpp_components",
+                executable="component_container_isolated",
+                parameters=[
+                    configured_params,
+                    {"autostart": autostart},
+                    {"use_sim_time": use_simulator},
+                ],
+                arguments=["--ros-args", "--log-level", log_level],
+                remappings=[("/tf", "tf"), ("/tf_static", "tf_static")],
+                output="screen",
+            ),
+            TimerAction(
+                period=2.0,
+                actions=[
+                    Node(
+                        package="nav2_map_server",
+                        executable="map_server",
+                        name="map_server",
+                        output="screen",
+                        respawn=False,
+                        respawn_delay=2.0,
+                        parameters=[
+                            {"yaml_filename": map_2d_file_path},
+                            {"frame_id": "map"},
+                            {"topic_name": "map_2d"},
+                        ],
+                    ),
+                ],
+            ),
+            Node(
+                package="nav2_lifecycle_manager",
+                executable="lifecycle_manager",
+                name="lifecycle_manager_navigation",
+                output="screen",
+                arguments=["--ros-args", "--log-level", log_level],
+                parameters=[
+                    {"use_sim_time": use_simulator},
+                    {"autostart": autostart},
+                    {"node_names": lifecycle_nodes},
+                ],
             ),
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
-                    os.path.join(nav2_bringup_launch_dir, 'navigation_launch.py')
+                    os.path.join(nav2_bringup_launch_dir, "navigation_launch.py")
                 ),
                 launch_arguments={
-                    'namespace': namespace,
-                    'use_sim_time': use_sim_time,
-                    'autostart': autostart,
-                    'params_file': params_file,
-                    'use_composition': use_composition,
-                    'use_respawn': use_respawn,
-                    'container_name': 'nav2_container',
+                    "namespace": namespace,
+                    "use_sim_time": use_simulator,
+                    "autostart": autostart,
+                    "params_file": params_file,
+                    "use_composition": use_composition,
+                    "use_respawn": use_respawn,
+                    "container_name": "nav2_container",
+                    "map_file_path": map_file_path,
                 }.items(),
             ),
         ]
     )
 
-
-    # delay 3 sec to wait for robot to be ready
-    rviz_node = TimerAction(
-        period=1.0,
-        actions=[
-            Node(
-                package="rviz2",
-                executable="rviz2",
-                condition=IfCondition(rviz_use),
-                arguments=[
-                    "-d",
-                    os.path.join(
-                        get_package_share_directory("c_megarover"),
-                        "rviz",
-                        "3d_localization.rviz",
-                    ),
-                ],
-            )
+    rviz_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        # condition=IfCondition(rviz_use),
+        arguments=[
+            "-d",
+            os.path.join(
+                get_package_share_directory("c_megarover"),
+                "rviz",
+                "3d_navigation.rviz",
+            ),
         ],
     )
 
     return LaunchDescription(
-        launch_args_for_octomap
-        + [
+        [
             declare_rviz_cmd,
             declare_simulator_cmd,
-            octmap_node,
+            declare_map_file_path,
+            declare_map_2d_file_path,
+            declare_namespace_cmd,
+            declare_use_namespace_cmd,
+            declare_use_composition_cmd,
+            declare_params_file_cmd,
+            declare_autostart_cmd,
+            declare_log_level_cmd,
+            declare_use_respawn_cmd,
+            localization,
+            bringup_cmd_group,
             rviz_node,
         ]
     )
