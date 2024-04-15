@@ -253,7 +253,7 @@ class LocalizationNode(Node):
         return self._global_localization(initial_pose)
 
     def _global_localization(self, pose_estimation):
-        self.get_logger().info("Global localization by scan-to-map matching......")
+        self.get_logger().debug("Global localization by scan-to-map matching......")
 
         if pose_estimation is None:
             self.get_logger().error("pose_estimation is None")
@@ -272,8 +272,8 @@ class LocalizationNode(Node):
             scan_tobe_mapped, global_map_in_FOV, initial=transformation, scale=1
         )
         toc = time.time()
-        self.get_logger().info("Time: {}".format(toc - tic))
-        self.get_logger().info("")
+        self.get_logger().debug("Time: {}".format(toc - tic))
+        self.get_logger().debug("")
 
         if fitness > self.LOCALIZATION_TH:
             self.T_map_to_odom = transformation
