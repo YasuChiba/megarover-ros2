@@ -308,8 +308,8 @@ class LocalizationNode(Node):
             return False
 
     def cb_initial_pose(self, pose_msg: PoseWithCovarianceStamped):
-        if self.initialized:
-            return
+        #if self.initialized:
+        #    return
 
         self.initial_pose = pose_with_covariance_stamped_to_mat(pose_msg)
         if self.cur_scan:
