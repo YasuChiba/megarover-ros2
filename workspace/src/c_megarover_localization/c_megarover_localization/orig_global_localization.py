@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # coding=utf8
 
-import threading
+import os
 import time
 import numpy as np
 import open3d as o3d
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
-from sensor_msgs.msg import PointCloud2, PointField
+from sensor_msgs.msg import PointCloud2
 import sensor_msgs_py.point_cloud2 as pc2
 
 from geometry_msgs.msg import PoseWithCovarianceStamped, Pose, Point, Quaternion
@@ -22,12 +22,7 @@ from tf_transformations import (
 import tf_transformations
 import ros2_numpy
 import copy
-
-# global_map = None
-# initialized = False
-# T_map_to_odom = np.eye(4)
-# cur_odom = None
-# cur_scan = None
+from rcl_interfaces.msg import ParameterDescriptor
 
 
 def pose_to_mat(pose_msg: PoseWithCovarianceStamped):
@@ -41,11 +36,6 @@ def pose_to_mat(pose_msg: PoseWithCovarianceStamped):
 
 def msg_to_array(pc_msg):
     pc_array = ros2_numpy.numpify(pc_msg)
-    # pc = np.zeros([len(pc_array), 3])
-    # pc[:, 0] = pc_array["x"]
-    # pc[:, 1] = pc_array["y"]
-    # pc[:, 2] = pc_array["z"]
-    # return pc
     return pc_array["xyz"]
 
 
@@ -135,28 +125,96 @@ def voxel_down_sample(pcd: o3d.geometry.PointCloud, voxel_size):
 
 
 class LocalizationNode(Node):
+
+    def declare_params(self):
+        self.declare_parameter("map_voxel_size", 0.01)
+        self.declare_parameter("scan_voxel_size", 0.01)
+        self.declare_parameter(
+            "localization_th",
+            0.95,
+            ParameterDescriptor(
+                description="The threshold of global localization."
+                + "only those scan2map-matching with higher fitness than LOCALIZATION_TH will be taken"
+            ),
+        )
+        self.declare_parameter(
+            "fov",
+            3.14,
+            ParameterDescriptor(
+                description="FOV(rad), modify this according to your LiDAR type"
+            ),
+        )
+        self.declare_parameter(
+            "fov_far",
+            10.0,
+            ParameterDescriptor(description="The farthest distance(meters) within FOV"),
+        )
+        self.declare_parameter(
+            "freq_localization",
+            0.5,
+            ParameterDescriptor(description="Global localization frequency (HZ)"),
+        )
+        self.declare_parameter(
+            "map_file_path",
+            "/home/user/workspace/pcd/sendagi.pcd",
+            ParameterDescriptor(description="The path of the map file (pcd format)"),
+        )
+        self.declare_parameter(
+            "map_frame",
+            "map",
+            ParameterDescriptor(description="default: map"),
+        )
+        self.declare_parameter(
+            "odom_frame",
+            "odom",
+            ParameterDescriptor(description="default: odom"),
+        )
+
+    def get_params(self):
+        self.MAP_VOXEL_SIZE = (
+            self.get_parameter("map_voxel_size").get_parameter_value().double_value
+        )
+        self.SCAN_VOXEL_SIZE = (
+            self.get_parameter("scan_voxel_size").get_parameter_value().double_value
+        )
+        self.LOCALIZATION_TH = (
+            self.get_parameter("localization_th").get_parameter_value().double_value
+        )
+        self.FOV = self.get_parameter("fov").get_parameter_value().double_value
+        self.FOV_FAR = self.get_parameter("fov_far").get_parameter_value().double_value
+        self.FREQ_LOCALIZATION = (
+            self.get_parameter("freq_localization").get_parameter_value().double_value
+        )
+        self.MAP_FILE_PATH = (
+            self.get_parameter("map_file_path").get_parameter_value().string_value
+        )
+        self.MAP_FRAME = (
+            self.get_parameter("map_frame").get_parameter_value().string_value
+        )
+        self.ODOM_FRAME = (
+            self.get_parameter("odom_frame").get_parameter_value().string_value
+        )
+
     def __init__(self):
         super().__init__("fast_lio_localization")
-
         self.get_logger().info("LocalizationNode init")
 
-        self.MAP_VOXEL_SIZE = 0.01
-        self.SCAN_VOXEL_SIZE = 0.01
+        self.declare_params()
+        self.get_params()
+
         self.initialized = False
         self.cur_scan: PointCloud2 = None
         self.cur_odom: Odometry = None
         self.T_map_to_odom = np.eye(4)
         self.global_map: o3d.geometry.PointCloud = None
 
-        # The threshold of global localization,
-        # only those scan2map-matching with higher fitness than LOCALIZATION_TH will be taken
-        self.LOCALIZATION_TH = 0.8
-        # FOV(rad), modify this according to your LiDAR type
-        self.FOV = 3.14
-        # The farthest distance(meters) within FOV
-        self.FOV_FAR = 10
-        # Global localization frequency (HZ)
-        self.FREQ_LOCALIZATION = 0.5
+        # Load map
+        # check the exsisitence of the map file
+        if not os.path.exists(self.MAP_FILE_PATH):
+            self.get_logger().error("Map file not found: {}".format(self.MAP_FILE_PATH))
+            raise FileNotFoundError("Map file not found: {}".format(self.MAP_FILE_PATH))
+        original_map_pcd = o3d.io.read_point_cloud(self.MAP_FILE_PATH)
+        self.global_map = voxel_down_sample(original_map_pcd, self.MAP_VOXEL_SIZE)
 
         self.pub_pc_in_map = self.create_publisher(PointCloud2, "/cur_scan_in_map", 1)
         self.pub_submap = self.create_publisher(PointCloud2, "/submap", 1)
@@ -171,13 +229,6 @@ class LocalizationNode(Node):
         self.odom_subscription = self.create_subscription(
             Odometry, "/Odometry", self.cb_save_cur_odom, qos_profile_sensor_data
         )
-        
-        # Load map
-        original_map_pcd = o3d.io.read_point_cloud("/home/user/workspace/pcd/sendagi.pcd")  # Update the path
-        self.global_map = voxel_down_sample(original_map_pcd, self.MAP_VOXEL_SIZE)
-
-        #######
-        #######
 
         self.initial_pose_subscription = self.create_subscription(
             PoseWithCovarianceStamped,
@@ -186,25 +237,12 @@ class LocalizationNode(Node):
             qos_profile_sensor_data,
         )
 
-        # while rclpy.ok() and not self.initialized:
-        #    self.get_logger().info("Waiting for initial pose...")
-        #    time.sleep(1)
-        # self.initial_pose_subscription.destroy()
-
-        # self.get_logger().info("")
-        # self.get_logger().info("initialize successfully!")
-
-        # call global_localization every 1 second.
+        # call global_localization every 1/self.FREQ_LOCALIZATION seconds
         self.localization_timer = self.create_timer(
             1 / self.FREQ_LOCALIZATION, self.global_localization
         )
 
     def global_localization(self):
-        self.get_logger().info("Constant global localization......")
-        if self.global_map is None:
-            self.get_logger().error("global map is not loaded")
-            return False
-
         if not self.initialized:
             self.get_logger().info("waiting for initial pose")
             return False
@@ -212,14 +250,12 @@ class LocalizationNode(Node):
         self._global_localization(self.T_map_to_odom)
 
     def initial_global_localization(self, initial_pose):
-        self.get_logger().info("Initial global localization......")
         return self._global_localization(initial_pose)
 
     def _global_localization(self, pose_estimation):
         self.get_logger().info("Global localization by scan-to-map matching......")
 
         if pose_estimation is None:
-            # pose_estimation = self.T_map_to_odom
             self.get_logger().error("pose_estimation is None")
             raise ValueError("pose_estimation is None")
 
@@ -228,13 +264,10 @@ class LocalizationNode(Node):
 
         global_map_in_FOV = self.crop_global_map_in_FOV(pose_estimation)
 
-        # 粗配准
-        # transformation, _ = self.registration_at_scale(scan_tobe_mapped, global_map_in_FOV, initial=pose_estimation, scale=5)
         transformation, _ = self.registration_at_scale(
             scan_tobe_mapped, global_map_in_FOV, initial=pose_estimation, scale=5
         )
 
-        # 精配准
         transformation, fitness = self.registration_at_scale(
             scan_tobe_mapped, global_map_in_FOV, initial=transformation, scale=1
         )
@@ -243,10 +276,8 @@ class LocalizationNode(Node):
         self.get_logger().info("")
 
         if fitness > self.LOCALIZATION_TH:
-            # T_map_to_odom = np.matmul(transformation, pose_estimation)
             self.T_map_to_odom = transformation
 
-            # 发布map_to_odom
             map_to_odom = Odometry()
             xyz = translation_from_matrix(self.T_map_to_odom)
             quat = quaternion_from_matrix(self.T_map_to_odom)
@@ -265,10 +296,9 @@ class LocalizationNode(Node):
             pose.orientation = orientation
 
             map_to_odom.pose.pose = pose
-            # map_to_odom.pose.pose = Pose(Point(*xyz), Quaternion(*quat))
             map_to_odom.header.stamp = self.cur_odom.header.stamp
-            map_to_odom.header.frame_id = "map"
-            map_to_odom.child_frame_id = "odom"
+            map_to_odom.header.frame_id = self.MAP_FRAME
+            map_to_odom.child_frame_id = self.ODOM_FRAME
             self.pub_map_to_odom.publish(map_to_odom)
             return True
         else:
@@ -281,7 +311,6 @@ class LocalizationNode(Node):
         if self.initialized:
             return
 
-        # self.initial_pose = pose_to_mat(pose_msg)
         self.initial_pose = pose_with_covariance_stamped_to_mat(pose_msg)
         if self.cur_scan:
             self.initialized = self.initial_global_localization(self.initial_pose)
@@ -292,14 +321,7 @@ class LocalizationNode(Node):
         self.cur_odom = msg
 
     def cb_save_cur_scan(self, pc_msg: PointCloud2):
-        # self.get_logger().info("Received scan")
-        # log properties of pc_msg.header
-        # self.get_logger().info("header: {}".format(pc_msg.header))
-
-        # self.get_logger().info("height: {}".format(pc_msg.height))
-        # self.get_logger().info("width: {}".format(pc_msg.width))
-
-        pc_msg.header.frame_id = "odom"
+        pc_msg.header.frame_id = self.ODOM_FRAME
         pc_msg.header.stamp = self.get_clock().now().to_msg()
         self.pub_pc_in_map.publish(pc_msg)
 
@@ -319,27 +341,8 @@ class LocalizationNode(Node):
         self.cur_scan.points = o3d.utility.Vector3dVector(pc[:, :3])
 
     def crop_global_map_in_FOV(self, pose_estimation):
-        # 当前scan原点的位姿
-        # T_odom_to_base_link = pose_to_mat(self.cur_odom)
-        # T_map_to_base_link = np.matmul(pose_estimation, T_odom_to_base_link)
-        # T_base_link_to_map = inverse_se3(T_map_to_base_link)
-
-        #self.get_logger().info("AAAAAAAAAAAAAAAAAAA++++++++++++++++++++++++++++")
-        # log pose_estimation
-        #self.get_logger().info("pose_estimation: {}".format(pose_estimation))
-        # log self.cur_odom
-        #self.get_logger().info("cur_odom: {}".format(self.cur_odom))
-
         # Convert the current odometry information to a transformation matrix
         T_odom_mat = odom_to_mat(self.cur_odom)
-
-        # log type of T_odom_mat
-        #self.get_logger().info("type of T_odom_mat: {}".format(type(T_odom_mat)))
-
-        # log type of pose_estimation
-        #self.get_logger().info(
-        #    "type of pose_estimation: {}".format(type(pose_estimation))
-        #)
 
         # Calculate the transformation matrix from the map frame to the base_link frame
         # This is achieved by multiplying the pose estimation matrix (map to odom)
@@ -347,12 +350,6 @@ class LocalizationNode(Node):
         T_map_to_base_link = np.matmul(pose_estimation, T_odom_mat)
         # Invert the transformation matrix to get from base_link to map frame
         T_base_link_to_map = inverse_se3(T_map_to_base_link)
-
-        # log T_map_to_base_link
-        #self.get_logger().info("T_map_to_base_link: {}".format(T_map_to_base_link))
-
-        # log T_odom_to_base_link
-        # self.get_logger().info("T_odom_to_base_link: {}".format(T_odom_to_base_link))
 
         # Convert the global map points to homogeneous coordinates (add a column of ones)
         global_map_in_map = np.array(self.global_map.points)
@@ -364,11 +361,6 @@ class LocalizationNode(Node):
 
         # 将视角内的地图点提取出来
         if self.FOV >= 3.14:
-            # 环状lidar 仅过滤距离
-            # indices = np.where(
-            #    (global_map_in_base_link[:, 0] < self.FOV_FAR) &
-            #    (np.abs(np.arctan2(global_map_in_base_link[:, 1], global_map_in_base_link[:, 0])) < self.FOV / 2.0)
-            # )
             # Simplified condition for a 360-degree FOV
             indices = np.where(
                 (
@@ -401,7 +393,7 @@ class LocalizationNode(Node):
 
         # 发布fov内点云
         header = self.cur_odom.header
-        header.frame_id = "map"
+        header.frame_id = self.MAP_FRAME
         cloud_msg = pc2.create_cloud_xyz32(
             header, np.array(global_map_in_FOV.points)[::10]
         )
@@ -411,15 +403,6 @@ class LocalizationNode(Node):
         return global_map_in_FOV
 
     def registration_at_scale(self, pc_scan, pc_map, initial, scale):
-        # result_icp = o3d.registration.registration_icp(
-        #    voxel_down_sample(pc_scan, self.SCAN_VOXEL_SIZE * scale), voxel_down_sample(pc_map, self.MAP_VOXEL_SIZE * scale),
-        #    1.0 * scale, initial,
-        #    o3d.registration.TransformationEstimationPointToPoint(),
-        #    o3d.registration.ICPConvergenceCriteria(max_iteration=20)
-        # )
-
-        # return result_icp.transformation, result_icp.fitness
-
         result_icp = o3d.pipelines.registration.registration_icp(
             voxel_down_sample(pc_scan, self.SCAN_VOXEL_SIZE * scale),
             voxel_down_sample(pc_map, self.MAP_VOXEL_SIZE * scale),

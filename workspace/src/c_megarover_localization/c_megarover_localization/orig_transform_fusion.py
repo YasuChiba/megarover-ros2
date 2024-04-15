@@ -15,9 +15,11 @@ import copy
 import tf_transformations
 from geometry_msgs.msg import TransformStamped
 
+
 def rotation_matrix_to_quaternion(rotation_matrix):
-        quaternion = tf_transformations.quaternion_from_matrix(rotation_matrix)
-        return quaternion
+    quaternion = tf_transformations.quaternion_from_matrix(rotation_matrix)
+    return quaternion
+
 
 class TransformFusionNode(Node):
     def __init__(self):
@@ -53,7 +55,9 @@ class TransformFusionNode(Node):
         orientation = pose_msg.pose.pose.orientation
         return np.matmul(
             tf_transformations.translation_matrix((position.x, position.y, position.z)),
-            tf_transformations.quaternion_matrix((orientation.x, orientation.y, orientation.z, orientation.w)),
+            tf_transformations.quaternion_matrix(
+                (orientation.x, orientation.y, orientation.z, orientation.w)
+            ),
         )
 
     def transform_fusion(self):
@@ -66,20 +70,19 @@ class TransformFusionNode(Node):
         if cur_odom is not None:
             self.broadcast_transform(T_map_to_odom)
 
-
     def broadcast_transform(self, transformation_matrix):
         t = TransformStamped()
 
         # Fill header information
         t.header.stamp = self.cur_odom_to_baselink.header.stamp
-        t.header.frame_id = 'map'
-        t.child_frame_id = 'odom'
-        
+        t.header.frame_id = "map"
+        t.child_frame_id = "odom"
+
         # Extract translation from the transformation matrix
         t.transform.translation.x = transformation_matrix[0, 3]
         t.transform.translation.y = transformation_matrix[1, 3]
         t.transform.translation.z = transformation_matrix[2, 3]
-        
+
         # Convert the rotation matrix to a quaternion
         # self.color_print.print_in_green("Transformation is: ")
         # self.color_print.print_in_green(transformation_matrix)
@@ -89,7 +92,7 @@ class TransformFusionNode(Node):
         t.transform.rotation.y = q[1]
         t.transform.rotation.z = q[2]
         t.transform.rotation.w = q[3]
-        
+
         # Broadcast the transformation
         self.br.sendTransform(t)
         # self.get_logger().info(f'Broadcasted map to odom transform with confidence {confidence}')
