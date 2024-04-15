@@ -39,5 +39,5 @@ ament_auto_add_executable(pcd_to_occupancygrid_tool
 
 ament_auto_package(
   INSTALL_TO_SHARE
-    launch config
+    launch
 )
