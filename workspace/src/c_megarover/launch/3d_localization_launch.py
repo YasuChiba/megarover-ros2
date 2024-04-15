@@ -48,6 +48,17 @@ def generate_launch_description():
         }.items(),
     )
 
+    lidar_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([launch_dir_path, "/lidar_launch.py"]),
+        launch_arguments={
+            "xfer_format": "0",
+            "lidar_config_path": os.path.join(
+                config_dir_path, "MID360_config.json"
+            ),
+        }.items(),
+        condition=UnlessCondition(use_simulator),
+    )
+
     # launch pointcloud_filter_node
     pointcloud_filter_node = Node(
         package="c_megarover_common",
@@ -151,6 +162,7 @@ def generate_launch_description():
             declare_simulator_cmd,
             declare_map_file_path,
             robot_launch,
+            lidar_launch,
             pointcloud_filter_node,
             fast_lio_node,
             global_localization_node,

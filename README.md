@@ -42,24 +42,16 @@ ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyUSB0 --baudrate 11
 
 3. record/play
 
-```
-ros2 bag record -a
-ros2 bag play hoge
-```
+    ```
+    ros2 bag record -a
+    ros2 bag play hoge
+    ```
 
 4. export pcd
-SLAMの結果の点群を、rosbagから取り出すにはros2bag_toolsを利用。  
-https://github.com/AIT-Assistive-Autonomous-Systems/ros2bag_tools#export
-
-`export.config`  
-```
-cut --start 200
-extract -t /Laser_map
-```
-
-`ros2 bag process -c export.config ../rosbag2_2024_03_20-02_49_47/ -o out.bag`  
-`ros2 bag export --in ./out.bag/ -t /Laser_map pcd`
-
+SLAMの結果の点群を、rosbagから取り出すには....
+    ```
+    ros2 run c_megarover_common pointcloud_to_pcd_node --ros-args -r input:=/Laser_map
+    ```
 
 
 ## Localization
@@ -73,7 +65,12 @@ extract -t /Laser_map
     `--clock` is required when the `simulator:=true`.
     
 
+## Navigation  
 
+1. run
+    ```
+    ros2 launch c_megarover navigation_launch.py simulator:=true rviz:=false map_file_path:=/home/user/workspace/pcd/sendagi.pcd map_2d_file_path:=/home/user/workspace/map/sendagi.yaml
+    ```
 
 
 
