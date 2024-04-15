@@ -7,16 +7,11 @@ from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, Time
 from launch.substitutions import PathJoinSubstitution, TextSubstitution
 from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-import launch_ros
-import launch
 import launch_ros.actions
 import launch_ros.events
 
 from launch import LaunchDescription
-from launch_ros.actions import LifecycleNode
 from launch_ros.actions import Node
-
-import lifecycle_msgs.msg
 
 
 def generate_launch_description():
@@ -24,7 +19,7 @@ def generate_launch_description():
     config_dir_path = os.path.join(package_path, "config")
     launch_dir_path = os.path.join(package_path, "launch")
 
-    use_sim_time = LaunchConfiguration("use_sim_time", default=False)
+    use_sim_time = LaunchConfiguration("use_sim_time", default=True)
     rviz_use = LaunchConfiguration("rviz", default=True)
     use_simulator = LaunchConfiguration(
         "simulator", default=True
@@ -49,19 +44,6 @@ def generate_launch_description():
         }.items(),
     )
 
-    # publish pointcloud from file using pcd_to_pointcloud_node
-    pcd_to_pointcloud_node = Node(
-        package="c_megarover_common",
-        executable="pcd_to_pointcloud_node",
-        output="screen",
-        parameters=[
-            {"file_name": "/home/user/workspace/pcd/sendagi.pcd"},
-            {"tf_frame": "map"},
-            {"publishing_period_ms": 10000},
-        ],
-        remappings=[("/cloud_pcd", LaunchConfiguration("pointcloud_map_topic"))],
-    )
-
     # launch pointcloud_filter_node
     pointcloud_filter_node = Node(
         package="c_megarover_common",
@@ -73,84 +55,65 @@ def generate_launch_description():
         ],
     )
 
-    pcl_localization_node = launch_ros.actions.LifecycleNode(
-        name="lidar_localization",
-        namespace="",
-        package="lidar_localization_ros2",
-        executable="lidar_localization_node",
-        parameters=[PathJoinSubstitution([config_dir_path, "3dlocalization.yaml"])],
-        remappings=[
-            ("/velodyne_points", "/livox/lidar"),
-            ("/map", LaunchConfiguration("pointcloud_map_topic")),
-            ("/odom", "/odom"),
-            ("/imu", "/livox/imu"),
-        ],
-        arguments=["--ros-args", "--log-level", "warn"],
+    # publish pointcloud from file using pcd_to_pointcloud_node
+    pcd_to_pointcloud_node = Node(
+        package="c_megarover_common",
+        executable="pcd_to_pointcloud_node",
         output="screen",
+        parameters=[
+            {"file_name": "/home/user/workspace/pcd/sendagi.pcd"},
+            {"tf_frame": "map"},
+            {"publishing_period_ms": 1000},
+        ],
+        remappings=[("/cloud_pcd", "/global_map")],
     )
 
-    to_inactive = launch.actions.EmitEvent(
-        event=launch_ros.events.lifecycle.ChangeState(
-            lifecycle_node_matcher=launch.events.matches_action(pcl_localization_node),
-            transition_id=lifecycle_msgs.msg.Transition.TRANSITION_CONFIGURE,
-        )
-    )
-
-    from_unconfigured_to_inactive = launch.actions.RegisterEventHandler(
-        launch_ros.event_handlers.OnStateTransition(
-            target_lifecycle_node=pcl_localization_node,
-            goal_state="unconfigured",
-            entities=[
-                launch.actions.LogInfo(msg="-- Unconfigured --"),
-                launch.actions.EmitEvent(
-                    event=launch_ros.events.lifecycle.ChangeState(
-                        lifecycle_node_matcher=launch.events.matches_action(
-                            pcl_localization_node
-                        ),
-                        transition_id=lifecycle_msgs.msg.Transition.TRANSITION_CONFIGURE,
-                    )
-                ),
-            ],
-        )
-    )
-
-    from_inactive_to_active = launch.actions.RegisterEventHandler(
-        launch_ros.event_handlers.OnStateTransition(
-            target_lifecycle_node=pcl_localization_node,
-            start_state="configuring",
-            goal_state="inactive",
-            entities=[
-                launch.actions.LogInfo(msg="-- Inactive --"),
-                launch.actions.EmitEvent(
-                    event=launch_ros.events.lifecycle.ChangeState(
-                        lifecycle_node_matcher=launch.events.matches_action(
-                            pcl_localization_node
-                        ),
-                        transition_id=lifecycle_msgs.msg.Transition.TRANSITION_ACTIVATE,
-                    )
-                ),
-            ],
-        )
-    )
-
-    pcl_localization = TimerAction(
-        period=6.0,
-        actions=[
-            from_unconfigured_to_inactive,
-            from_inactive_to_active,
-            pcl_localization_node,
-            to_inactive,
+    # launch fast_lio node.`
+    fast_lio_node = Node(
+        package="fast_lio",
+        executable="fastlio_mapping",
+        output="screen",
+        parameters=[
+            PathJoinSubstitution([config_dir_path, "3dlocalization.yaml"]),
+            {"use_sim_time": use_sim_time},
+        ],
+        remappings=[
+            ("/Odometry", "/fastlio_odom"),
         ],
     )
 
-    # launch lidar_launch.py
-    lidar_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([launch_dir_path, "/lidar_launch.py"]),
-        launch_arguments={
-            "xfer_format": "0",
-            "lidar_config_path": os.path.join(config_dir_path, "MID360_config.json"),
-        }.items(),
-        condition=UnlessCondition(use_simulator),
+    global_localization_node = Node(
+        package="c_megarover_localization",
+        executable="global_localization",
+        output="screen",
+        parameters=[
+            {"use_sim_time": use_sim_time},
+        ],
+        remappings=[
+            # ("/initialpose", "/initialpose"),
+            # ("/lio_odom", "/fastlio_odom"),
+            # ("/keyframe_scan", "/livox/lidar"),
+            ("/cloud_registered", "/cloud_registered"),  # sub
+            ("/Odometry", "/fastlio_odom"),  # sub
+            ("/map", "/global_map"),  # sub
+            ("/cur_scan_in_map", "/cur_scan_in_map"),  # pub
+            ("/submap", "/submap"),  # pub
+            ("/map_to_odom", "/map_to_odom"),  # pub
+        ],
+    )
+
+    transform_fusion_node = Node(
+        package="c_megarover_localization",
+        executable="transform_fusion",
+        output="screen",
+        remappings=[
+            # ("/lio_odom", "/fastlio_odom"),
+            # ("/map_to_odom", "/map_to_odom"),
+            # ("/localization", "/localization"),
+            ("/Odometry", "/fastlio_odom"),  # sub
+            ("/map_to_odom", "/map_to_odom"),  # sub
+            ("/localization", "/localization"),  # pub
+        ],
     )
 
     # delay 3 sec to wait for robot to be ready
@@ -161,12 +124,15 @@ def generate_launch_description():
                 package="rviz2",
                 executable="rviz2",
                 condition=IfCondition(rviz_use),
+                parameters=[
+                    {"use_sim_time": use_sim_time},
+                ],
                 arguments=[
                     "-d",
                     os.path.join(
                         get_package_share_directory("c_megarover"),
                         "rviz",
-                        "3d_localization.rviz",
+                        "3d_localization_fastlio.rviz",
                     ),
                 ],
             )
@@ -178,10 +144,11 @@ def generate_launch_description():
             declare_rviz_cmd,
             declare_simulator_cmd,
             robot_launch,
-            lidar_launch,
-            pcd_to_pointcloud_node,
             pointcloud_filter_node,
-            pcl_localization,
+            fast_lio_node,
+            global_localization_node,
+            transform_fusion_node,
+            pcd_to_pointcloud_node,
             rviz_node,
         ]
     )
