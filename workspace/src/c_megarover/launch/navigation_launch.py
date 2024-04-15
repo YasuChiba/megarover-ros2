@@ -15,8 +15,15 @@ import launch_ros.events
 from launch import LaunchDescription
 from launch_ros.actions import LifecycleNode
 from launch_ros.actions import Node
-
-import lifecycle_msgs.msg
+from launch.actions import (
+    DeclareLaunchArgument,
+    GroupAction,
+    IncludeLaunchDescription,
+    SetEnvironmentVariable,
+)
+from launch_ros.actions import PushROSNamespace
+from launch_ros.descriptions import ParameterFile
+from nav2_common.launch import ReplaceString, RewrittenYaml
 
 launch_args_for_octomap = [
     DeclareLaunchArgument("pointcloud_map_topic", default_value="/pcd_map"),
@@ -72,6 +79,95 @@ def generate_launch_description():
                 "pointcloud_max_z": 1.0,
             }
         ],
+    )
+
+
+    nav2_bringup_dir = get_package_share_directory('nav2_bringup')
+    nav2_bringup_launch_dir = os.path.join(nav2_bringup_dir, 'launch')
+
+    namespace = LaunchConfiguration('namespace')
+    use_namespace = LaunchConfiguration('use_namespace')
+    use_composition = LaunchConfiguration('use_composition')
+    params_file = LaunchConfiguration('params_file')
+    autostart = LaunchConfiguration('autostart')
+    log_level = LaunchConfiguration('log_level')
+    use_respawn = LaunchConfiguration('use_respawn')
+    declare_namespace_cmd = DeclareLaunchArgument(
+        'namespace', default_value='', description='Top-level namespace'
+    )
+    declare_use_namespace_cmd = DeclareLaunchArgument(
+        'use_namespace',
+        default_value='false',
+        description='Whether to apply a namespace to the navigation stack',
+    )
+    declare_use_composition_cmd = DeclareLaunchArgument(
+        'use_composition',
+        default_value='True',
+        description='Whether to use composed bringup',
+    )
+    declare_params_file_cmd = DeclareLaunchArgument(
+        'params_file',
+        default_value=os.path.join(nav2_bringup_dir, 'params', 'nav2_params.yaml'),
+        description='Full path to the ROS2 parameters file to use for all launched nodes',
+    )
+    declare_autostart_cmd = DeclareLaunchArgument(
+        'autostart',
+        default_value='true',
+        description='Automatically startup the nav2 stack',
+    )
+    declare_log_level_cmd = DeclareLaunchArgument(
+        'log_level', default_value='info', description='log level'
+    )
+    declare_use_respawn_cmd = DeclareLaunchArgument(
+        'use_respawn',
+        default_value='False',
+        description='Whether to respawn if a node crashes. Applied when composition is disabled.',
+    )
+
+
+    params_file = ReplaceString(
+        source_file=params_file,
+        replacements={'<robot_namespace>': ('/', namespace)},
+        condition=IfCondition(use_namespace),
+    )
+    configured_params = ParameterFile(
+        RewrittenYaml(
+            source_file=params_file,
+            root_key=namespace,
+            param_rewrites={},
+            convert_types=True,
+        ),
+        allow_substs=True,
+    )
+
+    bringup_cmd_group = GroupAction(
+        [
+            PushROSNamespace(condition=IfCondition(use_namespace), namespace=namespace),
+            Node(
+                condition=IfCondition(use_composition),
+                name='nav2_container',
+                package='rclcpp_components',
+                executable='component_container_isolated',
+                parameters=[configured_params, {'autostart': autostart}],
+                arguments=['--ros-args', '--log-level', log_level],
+                remappings=[('/tf', 'tf'), ('/tf_static', 'tf_static')],
+                output='screen',
+            ),
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    os.path.join(nav2_bringup_launch_dir, 'navigation_launch.py')
+                ),
+                launch_arguments={
+                    'namespace': namespace,
+                    'use_sim_time': use_sim_time,
+                    'autostart': autostart,
+                    'params_file': params_file,
+                    'use_composition': use_composition,
+                    'use_respawn': use_respawn,
+                    'container_name': 'nav2_container',
+                }.items(),
+            ),
+        ]
     )
 
 

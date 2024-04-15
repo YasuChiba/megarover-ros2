@@ -83,7 +83,7 @@ def generate_launch_description():
 
     global_localization_node = Node(
         package="c_megarover_localization",
-        executable="global_localization",
+        executable="orig_global_localization",
         output="screen",
         parameters=[
             PathJoinSubstitution([config_dir_path, "3dlocalization_global_localization.yaml"]),
@@ -98,7 +98,7 @@ def generate_launch_description():
 
     transform_fusion_node = Node(
         package="c_megarover_localization",
-        executable="transform_fusion",
+        executable="orig_transform_fusion",
         output="screen",
         remappings=[
             ("/lio_odom", "/fastlio_odom"),
