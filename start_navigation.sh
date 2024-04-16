@@ -1,31 +1,24 @@
 #!/bin/bash
 
-# Define cleanup function
-cleanup() {
-    echo "Stopping Docker containers..."
-    docker compose stop
-    echo "Docker containers have been stopped."
-}
+# Define the container name
+CONTAINER_NAME="megarover-start-recording"
 
-# Setup trap to catch SIGINT (Ctrl-C) and SIGTERM
-trap 'cleanup' SIGINT SIGTERM
+echo "Starting ROS 2 bag recording..."
 
+# Step 1: Run Docker container in detached mode and save the container ID
+docker run -it --privileged --net=host --ipc=host --pid=host \
+        -v $(pwd)/workspace:/home/user/workspace \
+        -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+        -e DISPLAY=$DISPLAY \
+        --name $CONTAINER_NAME \
+        megarover-ros2-ros \
+        /home/user/workspace/container_entrypoints/start_3d_navigation.sh
 
-echo "Launching Docker container..."
-docker compose start  # -d runs it in detached mode
+docker stop $CONTAINER_NAME
 
-echo "Waiting for the container to initialize..."
-sleep 3  # Adjust time as necessary for your container to initialize
+# Optional: Wait a bit if you need to ensure that logs or other operations complete
+sleep 3
 
-echo "Launching ROS2 nodes..."
-docker exec megarover-ros2-ros-1 /bin/bash -c "source /opt/ros/humble/setup.bash && \
-                                                source /home/user/ws_livox/install/setup.bash && \
-                                                source /home/user/uros_ws/install/setup.bash && \
-                                                source /home/user/workspace/install/setup.bash && \
-                                                if [ -e /dev/ttyUSB0 ]; then sudo chmod 666 /dev/ttyUSB0; fi && \
-                                                ros2 launch c_megarover navigation_launch.py simulator:=false rviz:=true map_file_path:=/home/user/workspace/maps/sendagi.pcd map_2d_file_path:=/home/user/workspace/maps/sendagi.yaml"
-
-echo "ROS2 nodes have been launched."
-
-
-cleanup
+# Step 6: Remove the Docker container
+docker rm $CONTAINER_NAME
+echo "Container $CONTAINER_NAME removed."
