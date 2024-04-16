@@ -63,6 +63,15 @@ def generate_launch_description():
         }.items(),
     )
 
+    lidar_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([launch_dir_path, "/lidar_launch.py"]),
+        launch_arguments={
+            "xfer_format": "0",
+            "lidar_config_path": os.path.join(config_dir_path, "MID360_config.json"),
+        }.items(),
+        condition=UnlessCondition(use_simulator),
+    )
+
     # publish pointcloud from file using pcd_to_pointcloud_node
     pcd_to_pointcloud_node = Node(
         package="c_megarover_common",
@@ -150,6 +159,7 @@ def generate_launch_description():
             declare_map_file_path,
             declare_map_2d_file_path,
             robot_launch,
+            lidar_launch,
             pcd_to_pointcloud_node,
             pointcloud_to_laserscan,
             nav2_launch,
