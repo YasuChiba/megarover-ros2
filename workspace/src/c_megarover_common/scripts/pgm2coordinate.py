@@ -1,12 +1,14 @@
 import sys
 import yaml
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog
+import csv
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QLineEdit
 from PyQt5.QtGui import QPixmap, QImage
 from PIL import Image
 
 class ImageWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.selected_points = []  # Store selected points with labels
         self.initUI()
 
     def initUI(self):
@@ -15,7 +17,7 @@ class ImageWindow(QMainWindow):
         self.setCentralWidget(self.widget)
         self.layout = QVBoxLayout()
 
-        # Button to load PGM
+        # Button to load PGM and YAML
         self.btn_load = QPushButton('Load PGM and YAML', self)
         self.btn_load.clicked.connect(self.loadImage)
         self.layout.addWidget(self.btn_load)
@@ -24,19 +26,29 @@ class ImageWindow(QMainWindow):
         self.label_image = QLabel(self)
         self.layout.addWidget(self.label_image)
 
+        # Text field for entering labels
+        self.text_label = QLineEdit(self)
+        self.text_label.setPlaceholderText("Enter label for selected point")
+        self.layout.addWidget(self.text_label)
+
         # Label to display coordinates and value
         self.label_info = QLabel('Select a point', self)
         self.layout.addWidget(self.label_info)
 
+        # Button to save selected points to CSV
+        self.btn_save = QPushButton('Save Points to CSV', self)
+        self.btn_save.clicked.connect(self.savePoints)
+        self.layout.addWidget(self.btn_save)
+
         self.widget.setLayout(self.layout)
         self.setGeometry(300, 300, 350, 350)
-        self.setWindowTitle('PGM Viewer with Map Info')
+        self.setWindowTitle('PGM Viewer with ROS Coordinates and Saving')
         self.show()
 
     def loadImage(self):
         # Open dialog to select the YAML file
-        #fname, _ = QFileDialog.getOpenFileName(self, 'Open file', '.', "YAML files (*.yaml *.yml)")
-        fname = '/home/user/workspace/maps/map.yaml'
+        fname, _ = QFileDialog.getOpenFileName(self, 'Open file', '.', "YAML files (*.yaml *.yml)")
+        #fname = '/home/user/workspace/maps/map.yaml'
         if fname:
             with open(fname, 'r') as file:
                 self.map_data = yaml.safe_load(file)
@@ -62,9 +74,22 @@ class ImageWindow(QMainWindow):
         # Calculate real-world coordinates
         real_x = self.map_data['origin'][0] + (self.image.width - x - 1)  * self.map_data['resolution']
         real_y = self.map_data['origin'][1] + y * self.map_data['resolution']
-        self.label_info.setText(f'Pixel: ({x},{y}) Value: {pixel_value}, World: ({real_x:.2f}, {real_y:.2f})')
+        #self.label_info.setText(f'Pixel: ({x},{y}) Value: {pixel_value}, World: ({real_x:.2f}, {real_y:.2f})')
+
+        label = self.text_label.text().strip() or "No Label"
+        self.selected_points.append((real_x, real_y, label))
+        self.label_info.setText(f'Pixel: ({x},{self.image.height - y - 1}) Value: {pixel_value}, World: ({real_x:.2f}, {real_y:.2f}), Label: {label}')
 
 
+    def savePoints(self):
+        fname, _ = QFileDialog.getSaveFileName(self, 'Save file', '.', "CSV files (*.csv)")
+        if fname:
+            with open(fname, 'w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(['X Coordinate', 'Y Coordinate', 'Label'])
+                for point in self.selected_points:
+                    writer.writerow(point)
+            self.label_info.setText('Points saved successfully.')
 
 def main():
     app = QApplication(sys.argv)
