@@ -149,8 +149,8 @@ local_costmap:
       robot_base_frame: base_footprint
       use_sim_time: True
       rolling_window: true
-      width: 3
-      height: 3
+      width: 5
+      height: 5
       map_topic: "/map_2d"
       resolution: 0.02
       robot_radius: 0.25
@@ -170,14 +170,14 @@ local_costmap:
         mark_threshold: 0
         observation_sources: scan
         scan:
-          topic: /livox/lidar
+          topic: /livox/filtered_lidar
           max_obstacle_height: 1.0
           clearing: True
           marking: True
           data_type: "PointCloud2"
           raytrace_max_range: 3.0
           raytrace_min_range: 0.0
-          obstacle_max_range: 2.5
+          obstacle_max_range: 3.0
           obstacle_min_range: 0.0
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
@@ -204,7 +204,7 @@ global_costmap:
         enabled: True
         observation_sources: scan
         scan:
-          topic: /livox/lidar
+          topic: /livox/filtered_lidar
           max_obstacle_height: 1.0
           clearing: True
           marking: True
@@ -260,8 +260,11 @@ smoother_server:
 
 behavior_server:
   ros__parameters:
-    costmap_topic: local_costmap/costmap_raw
-    footprint_topic: local_costmap/published_footprint
+    local_costmap_topic: local_costmap/costmap_raw
+    local_footprint_topic: local_costmap/published_footprint
+    global_costmap_topic: global_costmap/costmap_raw
+    global_footprint_topic: global_costmap/published_footprint
+
     cycle_frequency: 10.0
     behavior_plugins: ["spin", "backup", "drive_on_heading", "assisted_teleop", "wait"]
     spin:
@@ -274,14 +277,15 @@ behavior_server:
       plugin: "nav2_behaviors/Wait"
     assisted_teleop:
       plugin: "nav2_behaviors/AssistedTeleop"
-    global_frame: odom
+    global_frame: map
+    local_frame: odom
     robot_base_frame: base_footprint
     transform_tolerance: 0.1
     use_sim_time: true
     simulate_ahead_time: 2.0
-    max_rotational_vel: 1.0
-    min_rotational_vel: 0.4
-    rotational_acc_lim: 3.2
+    max_rotational_vel: 0.5
+    min_rotational_vel: 0.1
+    rotational_acc_lim: 2.0
 
 robot_state_publisher:
   ros__parameters:

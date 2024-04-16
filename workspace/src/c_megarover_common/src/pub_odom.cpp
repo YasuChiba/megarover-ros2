@@ -40,6 +40,27 @@ public:
         subscription_ = this->create_subscription<geometry_msgs::msg::Twist>(
             "rover_odo", rclcpp::SensorDataQoS(), std::bind(&PubOdomNode::rover_odom_callback, this, _1));
 
+        initial_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
+            "initialpose", rclcpp::SensorDataQoS(), [this](const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg) {
+                // log
+                RCLCPP_INFO(this->get_logger(), "Initial pose received");
+
+                return;
+                x = msg->pose.pose.position.x;
+                y = msg->pose.pose.position.y;
+
+
+                th = 0;
+                // extract quaternion from message and set to q
+                q.setX(msg->pose.pose.orientation.x);
+                q.setY(msg->pose.pose.orientation.y);
+                q.setZ(msg->pose.pose.orientation.z);
+                q.setW(msg->pose.pose.orientation.w);   
+
+                last_time = this->get_clock()->now();             
+
+        });
+
         // Initialize the transform broadcaster
         // tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
     }
@@ -124,6 +145,9 @@ private:
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr publisher_;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr subscription_;
+    // subscribe initial pose
+    rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr initial_pose_sub_;
+
     // std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 };
 

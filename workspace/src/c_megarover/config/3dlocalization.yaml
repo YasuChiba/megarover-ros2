@@ -62,14 +62,14 @@ global_localization:
         localization_threshold: 0.95
         fov: 3.14
         fov_far: 10.0
-        freq_localization: 0.5
+        freq_localization: 1.0
         #map_file_path: "./test.pcd"
         map_frame: "map"
         odom_frame: "odom"
 
 transform_fusion:
     ros__parameters:
-        freq_tf_broadcast: 20.0
+        freq_tf_broadcast: 50.0
         map_frame: "map"
         odom_frame: "odom"
 
