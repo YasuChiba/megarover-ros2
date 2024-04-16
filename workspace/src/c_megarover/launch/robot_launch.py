@@ -70,6 +70,7 @@ def generate_launch_description():
         executable="pub_odom_node",
         name="pub_odom",
         parameters=[
+            {"use_simulator": use_simulator},
             {"broadcast_tf": broadcast_robot_odom},
             {"odom_frame_id": "odom"},
             {"base_frame_id": "base_footprint"},

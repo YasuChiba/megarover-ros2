@@ -80,11 +80,6 @@ private:
 
         // publish odometry and tf transform
         publisher_->publish(msg);
-
-        if(broadcast_tf) {
-            // send the transform
-            tf_broadcaster_->sendTransform(t);
-        }
     }
 
     void rover_odom_callback(const std::shared_ptr<geometry_msgs::msg::Twist> msg)
@@ -120,6 +115,10 @@ private:
         t.transform.rotation.w = q.w();
 
         last_time = current_time;
+        if(broadcast_tf) {
+            // send the transform
+            tf_broadcaster_->sendTransform(t);
+        }
     }
 
     double vx = 0.0;
