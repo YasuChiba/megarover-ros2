@@ -53,6 +53,25 @@ SLAMの結果の点群を、rosbagから取り出すには....
     ros2 run c_megarover_common pointcloud_to_pcd_node --ros-args -r input:=/Laser_map
     ```
 
+## 3d and 2d map creation
+
+1. record  
+   `start_recording.sh`をコンテナ外から実行。もしくはコンテナ内で`ros2 launch c_megarover record_all_launch.py simulator:=false rviz:=true`を実行。
+   `workspace/rosbag`にデータが格納。
+1. slam
+   1. 以下の２つをそれぞれ同時に実行
+       - `ros2 launch c_megarover create_3dmap_launch_rosbag.py`
+       - `ros2 bag play rosbag/rosbag_2024-xxxx/ --topics /livox/imu /livox_lidar`
+   1. マッピングの終盤に以下を実行
+       - `ros2 run c_megarover_common pcd_to_pointcloud_node --ros-args -p file_name:=maps/map.pcd -p tf_frame:=livox_frame`
+   1. pcdファイルが出力されたあとに以下を実行
+       - `ros2 run c_megarover_common pcd_to_occupancygrid_tool --ros-args -p pcd_file_path:=/home/user/workspace/maps/map.pcd -p output_file_path:=/home/user/workspace/maps/map`
+
+## 2D navigation
+コンテナ外で`start_2d_navigation.sh`を実行. 参照する地図を変える場合`workspace/container_entrypoints/start_2d_navigation.sh`を編集。
+
+
+# memo
 
 ## Localization
 
