@@ -30,3 +30,4 @@ workspace/rosbag
 map/
 pcd/
 workspace/maps/others/
+workspace/maps/

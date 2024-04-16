@@ -96,7 +96,7 @@ int    effct_feat_num = 0, time_log_counter = 0, scan_count = 0, publish_count =
 int    iterCount = 0, feats_down_size = 0, NUM_MAX_ITERATIONS = 0, laserCloudValidNum = 0, pcd_save_interval = -1, pcd_index = 0;
 bool   point_selected_surf[100000] = {0};
 bool   lidar_pushed, flg_first_scan = true, flg_exit = false, flg_EKF_inited;
-bool   scan_pub_en = false, dense_pub_en = false, scan_body_pub_en = false;
+bool   scan_pub_en = false, dense_pub_en = false, scan_body_pub_en = false, broadcast_odom_en = false;
 bool    is_first_lidar = true;
 
 vector<vector<int>>  pointSearchInd_surf; 
@@ -644,19 +644,22 @@ void publish_odometry(const rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPt
         odomAftMapped.pose.covariance[i*6 + 5] = P(k, 2);
     }
 
-    geometry_msgs::msg::TransformStamped trans;
-    trans.header.frame_id = odom_frame_id;
-    trans.child_frame_id = base_link_frame_id;
-    trans.header.stamp = get_ros_time(lidar_end_time);
+    if(broadcast_odom_en)
+    {
+        geometry_msgs::msg::TransformStamped trans;
+        trans.header.frame_id = odom_frame_id;
+        trans.child_frame_id = base_link_frame_id;
+        trans.header.stamp = get_ros_time(lidar_end_time);
 
-    trans.transform.translation.x = odomAftMapped.pose.pose.position.x;
-    trans.transform.translation.y = odomAftMapped.pose.pose.position.y;
-    trans.transform.translation.z = odomAftMapped.pose.pose.position.z;
-    trans.transform.rotation.w = odomAftMapped.pose.pose.orientation.w;
-    trans.transform.rotation.x = odomAftMapped.pose.pose.orientation.x;
-    trans.transform.rotation.y = odomAftMapped.pose.pose.orientation.y;
-    trans.transform.rotation.z = odomAftMapped.pose.pose.orientation.z;
-    //tf_br->sendTransform(trans);
+        trans.transform.translation.x = odomAftMapped.pose.pose.position.x;
+        trans.transform.translation.y = odomAftMapped.pose.pose.position.y;
+        trans.transform.translation.z = odomAftMapped.pose.pose.position.z;
+        trans.transform.rotation.w = odomAftMapped.pose.pose.orientation.w;
+        trans.transform.rotation.x = odomAftMapped.pose.pose.orientation.x;
+        trans.transform.rotation.y = odomAftMapped.pose.pose.orientation.y;
+        trans.transform.rotation.z = odomAftMapped.pose.pose.orientation.z;
+        tf_br->sendTransform(trans);
+    }
 }
 
 void publish_path(rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr pubPath)
@@ -805,6 +808,7 @@ public:
         this->declare_parameter<bool>("publish.scan_publish_en", true);
         this->declare_parameter<bool>("publish.dense_publish_en", true);
         this->declare_parameter<bool>("publish.scan_bodyframe_pub_en", true);
+        this->declare_parameter<bool>("publish.broadcast_odom_en", false);
         this->declare_parameter<int>("max_iteration", 4);
         this->declare_parameter<string>("map_file_path", "");
         this->declare_parameter<string>("common.lid_topic", "/livox/lidar");
@@ -846,6 +850,7 @@ public:
         this->get_parameter_or<bool>("publish.scan_publish_en", scan_pub_en, true);
         this->get_parameter_or<bool>("publish.dense_publish_en", dense_pub_en, true);
         this->get_parameter_or<bool>("publish.scan_bodyframe_pub_en", scan_body_pub_en, true);
+        this->get_parameter_or<bool>("publish.broadcast_odom_en", broadcast_odom_en, false);
         this->get_parameter_or<int>("max_iteration", NUM_MAX_ITERATIONS, 4);
         this->get_parameter_or<string>("map_file_path", map_file_path, "");
         this->get_parameter_or<string>("common.lid_topic", lid_topic, "/livox/lidar");

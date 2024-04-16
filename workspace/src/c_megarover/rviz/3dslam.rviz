@@ -6,7 +6,6 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /RobotModel1/Status1
       Splitter Ratio: 0.5
     Tree Height: 555
   - Class: rviz_common/Selection
@@ -39,8 +38,6 @@ Visualization Manager:
           Value: true
         base_link:
           Value: true
-        body:
-          Value: true
         left_wheel_1:
           Value: true
         livox_frame:
@@ -53,17 +50,16 @@ Visualization Manager:
       Name: TF
       Show Arrows: true
       Show Axes: true
-      Show Names: false
+      Show Names: true
       Tree:
-        body:
-          base_footprint:
-            base_link:
-              left_wheel_1:
-                {}
-              livox_frame:
-                {}
-              right_wheel_1:
-                {}
+        base_footprint:
+          base_link:
+            left_wheel_1:
+              {}
+            livox_frame:
+              {}
+            right_wheel_1:
+              {}
         odom:
           {}
       Update Interval: 0
@@ -86,7 +82,7 @@ Visualization Manager:
           Value: true
         Value: true
       Enabled: true
-      Keep: 100
+      Keep: 3
       Name: Odometry
       Position Tolerance: 0.10000000149011612
       Shape:
@@ -184,7 +180,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 87
+      Max Intensity: 150
       Min Color: 0; 0; 0
       Min Intensity: 0
       Name: CloudEffected
@@ -206,8 +202,8 @@ Visualization Manager:
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
-        Max Value: 2.4174280166625977
-        Min Value: -0.28841516375541687
+        Max Value: 2.3295180797576904
+        Min Value: -0.4946107864379883
         Value: true
       Axis: Z
       Channel Name: intensity
@@ -225,7 +221,7 @@ Visualization Manager:
       Position Transformer: XYZ
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.05000000074505806
+      Size (m): 0.009999999776482582
       Style: Flat Squares
       Topic:
         Depth: 5
@@ -237,60 +233,10 @@ Visualization Manager:
       Use Fixed Frame: true
       Use rainbow: true
       Value: true
-    - Alpha: 1
-      Class: rviz_default_plugins/RobotModel
-      Collision Enabled: false
-      Description File: ""
-      Description Source: Topic
-      Description Topic:
-        Depth: 5
-        Durability Policy: Volatile
-        History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /robot_description
-      Enabled: true
-      Links:
-        All Links Enabled: true
-        Expand Joint Details: false
-        Expand Link Details: false
-        Expand Tree: false
-        Link Tree Style: Links in Alphabetic Order
-        base_footprint:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-        base_link:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        left_wheel_1:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        livox_frame:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        right_wheel_1:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-      Mass Properties:
-        Inertia: false
-        Mass: false
-      Name: RobotModel
-      TF Prefix: ""
-      Update Interval: 0
-      Value: true
-      Visual Enabled: true
   Enabled: true
   Global Options:
     Background Color: 0; 0; 0
-    Fixed Frame: base_link
+    Fixed Frame: odom
     Frame Rate: 30
   Name: root
   Tools:
@@ -333,25 +279,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 7.352853298187256
+      Distance: 8.650958061218262
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: -0.008504047989845276
-        Y: -0.0005770106799900532
-        Z: 0.034441977739334106
+        X: -1.7202903032302856
+        Y: 0.14097999036312103
+        Z: 0.033841583877801895
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 1.2797963619232178
+      Pitch: 1.5697963237762451
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz_default_plugins)
-      Yaw: 3.988551139831543
+      Yaw: 1.8753751516342163
     Saved: ~
 Window Geometry:
   Displays:

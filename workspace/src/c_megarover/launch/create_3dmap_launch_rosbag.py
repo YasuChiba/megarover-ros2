@@ -13,25 +13,24 @@ def generate_launch_description():
     config_dir_path = os.path.join(package_path, "config")
     launch_dir_path = os.path.join(package_path, "launch")
 
-    use_sim_time = LaunchConfiguration("use_sim_time", default=False)
     rviz_use = LaunchConfiguration("rviz", default=True)
-    use_simulator = LaunchConfiguration('simulator', default=True) # using simulator or rosbag to publish lidar data
+    use_simulator = LaunchConfiguration("simulator", default=False)
 
     declare_rviz_cmd = DeclareLaunchArgument(
         "rviz", default_value="true",
         description="Use RViz to monitor results"
     )
-
     declare_simulator_cmd = DeclareLaunchArgument(
-        "simulator", default_value="true",
-        description="Use Simulator/rosbag and do not use Livox LiDARs"
+        "simulator", default_value="false",
+        description="Use Simulator and do not use Livox LiDARs"
     )
 
     # launch robot_launch.py
     robot_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([launch_dir_path, "/robot_launch.py"]),
         launch_arguments={
-            "simulator": use_simulator
+            "simulator": use_simulator,
+            "broadcast_robot_odom": "false",
         }.items()
     )
 
@@ -41,6 +40,9 @@ def generate_launch_description():
         package="c_megarover_common",
         executable="pointcloud_filter_node",
         output="screen",
+        parameters=[
+            {"use_sim_time": use_simulator},
+        ],
         remappings=[
             ("/in_cloud", "/livox/lidar"),
             ("/out_cloud", "/livox/filtered_lidar")
@@ -51,33 +53,31 @@ def generate_launch_description():
     fast_lio_node = Node(
         package="fast_lio",
         executable="fastlio_mapping",
+        name="fastlio_mapping",
         output="screen",
         parameters=[
             PathJoinSubstitution([config_dir_path, "3dslam_config.yaml"]),
-            {"use_sim_time": use_sim_time},
+            {"use_sim_time": use_simulator},
         ],
         remappings=[
             ("/Odometry", "/fastlio_odom"),
         ]
     )
 
-    # delay 3 sec to wait for robot to be ready
-    rviz_node = TimerAction(
-        period=1.0,
-        actions=[
-            Node(
-                package="rviz2",
-                executable="rviz2",
-                condition=IfCondition(rviz_use),
-                arguments=[
-                    "-d",
-                    os.path.join(
-                        get_package_share_directory("c_megarover"),
-                        "rviz",
-                        "3dslam.rviz",
-                    ),
-                ],
-            )
+    rviz_node = Node(
+        package="rviz2",
+        executable="rviz2",
+        condition=IfCondition(rviz_use),
+        parameters=[
+            {"use_sim_time": use_simulator},
+        ],
+        arguments=[
+            "-d",
+            os.path.join(
+                get_package_share_directory("c_megarover"),
+                "rviz",
+                "3dslam.rviz",
+            ),
         ],
     )
 
