@@ -69,7 +69,9 @@ SLAMの結果の点群を、rosbagから取り出すには....
 
 1. run
     ```
-    ros2 launch c_megarover navigation_launch.py simulator:=true rviz:=false map_file_path:=/home/user/workspace/pcd/sendagi.pcd map_2d_file_path:=/home/user/workspace/map/sendagi.yaml
+    ros2 launch c_megarover navigation_launch.py simulator:=true rviz:=false map_file_path:=/home/user/workspace/maps/sendagi.pcd map_2d_file_path:=/home/user/workspace/maps/sendagi.yaml
+
+    ros2 bag play rosbag/rosbag2_2024_04_12-03_10_57/ --topic /livox/imu /livox/lidar /rover_odo --clock
     ```
 
 

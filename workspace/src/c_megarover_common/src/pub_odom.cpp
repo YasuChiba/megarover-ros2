@@ -31,6 +31,17 @@ public:
                 const rclcpp::NodeOptions &options)
         : Node("odometry_publisher", name_space, options)
     {
+
+        // declare and get parameters. odom_frame_id, base_frame_id. set default values.
+        this->declare_parameter("odom_frame_id", "odom");
+        this->declare_parameter("base_frame_id", "base_footprint");
+        this->declare_parameter("broadcast_tf", false);
+
+        this->get_parameter("odom_frame_id", odom_frame_id);
+        this->get_parameter("base_frame_id", base_frame_id);
+        this->get_parameter("broadcast_tf", broadcast_tf);
+
+
         publisher_ = this->create_publisher<nav_msgs::msg::Odometry>("odom", rclcpp::QoS(1));
 
         // publish odometry data and tf transform every 10ms (=100hz)
@@ -40,29 +51,8 @@ public:
         subscription_ = this->create_subscription<geometry_msgs::msg::Twist>(
             "rover_odo", rclcpp::SensorDataQoS(), std::bind(&PubOdomNode::rover_odom_callback, this, _1));
 
-        initial_pose_sub_ = this->create_subscription<geometry_msgs::msg::PoseWithCovarianceStamped>(
-            "initialpose", rclcpp::SensorDataQoS(), [this](const geometry_msgs::msg::PoseWithCovarianceStamped::SharedPtr msg) {
-                // log
-                RCLCPP_INFO(this->get_logger(), "Initial pose received");
-
-                return;
-                x = msg->pose.pose.position.x;
-                y = msg->pose.pose.position.y;
-
-
-                th = 0;
-                // extract quaternion from message and set to q
-                q.setX(msg->pose.pose.orientation.x);
-                q.setY(msg->pose.pose.orientation.y);
-                q.setZ(msg->pose.pose.orientation.z);
-                q.setW(msg->pose.pose.orientation.w);   
-
-                last_time = this->get_clock()->now();             
-
-        });
-
         // Initialize the transform broadcaster
-        // tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
+        tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
     }
 
 private:
@@ -75,7 +65,7 @@ private:
 
         // next, we'll publish the odometry message over ROS
         msg.header.stamp = current_time;
-        msg.header.frame_id = "odom";
+        msg.header.frame_id = odom_frame_id;
 
         // set the position
         msg.pose.pose.position.x = x;
@@ -84,13 +74,17 @@ private:
         msg.pose.pose.orientation = odom_quat;
 
         // set the velocity
-        msg.child_frame_id = "base_footprint";
+        msg.child_frame_id = base_frame_id;
         msg.twist.twist.linear.x = vx;
         msg.twist.twist.angular.z = vth;
 
         // publish odometry and tf transform
         publisher_->publish(msg);
-        // tf_broadcaster_->sendTransform(t);
+
+        if(broadcast_tf) {
+            // send the transform
+            tf_broadcaster_->sendTransform(t);
+        }
     }
 
     void rover_odom_callback(const std::shared_ptr<geometry_msgs::msg::Twist> msg)
@@ -112,8 +106,8 @@ private:
         // Read message content and assign it to
         // corresponding tf variables
         t.header.stamp = current_time;
-        t.header.frame_id = "odom";
-        t.child_frame_id = "base_footprint";
+        t.header.frame_id = odom_frame_id;
+        t.child_frame_id = base_frame_id;
 
         t.transform.translation.x = x;
         t.transform.translation.y = y;
@@ -142,13 +136,15 @@ private:
     double th = 0.0;
     tf2::Quaternion q;
 
+    std::string odom_frame_id = "odom";
+    std::string base_frame_id = "base_footprint";
+    bool broadcast_tf = false;
+
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr publisher_;
     rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr subscription_;
-    // subscribe initial pose
-    rclcpp::Subscription<geometry_msgs::msg::PoseWithCovarianceStamped>::SharedPtr initial_pose_sub_;
 
-    // std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
+    std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 };
 
 RCLCPP_COMPONENTS_REGISTER_NODE(PubOdomNode)

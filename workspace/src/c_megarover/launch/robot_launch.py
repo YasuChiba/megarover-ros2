@@ -19,7 +19,7 @@ def generate_launch_description():
     use_simulator = LaunchConfiguration("simulator")
     robot_usb_device = LaunchConfiguration("robot_usb_device", default="/dev/ttyUSB0")
     robot_model_path = LaunchConfiguration("robot_model_path")
-    use_robot_odom = LaunchConfiguration("use_robot_odom", default="true")
+    broadcast_robot_odom = LaunchConfiguration("broadcast_robot_odom", default="false")
 
     declare_simulator_cmd = DeclareLaunchArgument(
         "simulator",
@@ -34,9 +34,9 @@ def generate_launch_description():
     )
 
     declare_use_robot_odom_cmd = DeclareLaunchArgument(
-        "use_robot_odom",
-        default_value="true",
-        description="publish Robot's Odometry",
+        "broadcast_robot_odom",
+        default_value="false",
+        description="broadcasrt Robot's Odometry. (odom -> base_footprint)",
     )
 
     description_package_path = get_package_share_path("c_megarover_description")
@@ -69,7 +69,11 @@ def generate_launch_description():
         package="c_megarover_common",
         executable="pub_odom_node",
         name="pub_odom",
-        condition=IfCondition(use_robot_odom),
+        parameters=[
+            {"broadcast_tf": broadcast_robot_odom},
+            {"odom_frame_id": "odom"},
+            {"base_frame_id": "base_footprint"},
+        ],
         remappings=[
             ("/odom", "/megarover_odom"), # pub
             ("/rover_odo", "/rover_odo"), #sub
