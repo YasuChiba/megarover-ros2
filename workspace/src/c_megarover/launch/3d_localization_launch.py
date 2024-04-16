@@ -52,9 +52,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource([launch_dir_path, "/lidar_launch.py"]),
         launch_arguments={
             "xfer_format": "0",
-            "lidar_config_path": os.path.join(
-                config_dir_path, "MID360_config.json"
-            ),
+            "lidar_config_path": os.path.join(config_dir_path, "MID360_config.json"),
         }.items(),
         condition=UnlessCondition(use_simulator),
     )
@@ -133,6 +131,17 @@ def generate_launch_description():
         ],
     )
 
+    ekf_node = Node(
+        package="robot_localization",
+        executable="ekf_node",
+        name="ekf_filter_node",
+        output="screen",
+        parameters=[
+            PathJoinSubstitution([config_dir_path, "3dlocalization.yaml"]),
+            {"use_sim_time": use_simulator},
+        ],
+    )
+
     # delay 3 sec to wait for robot to be ready
     rviz_node = TimerAction(
         period=0.0,
@@ -168,6 +177,7 @@ def generate_launch_description():
             global_localization_node,
             transform_fusion_node,
             pcd_to_pointcloud_node,
+            ekf_node,
             rviz_node,
         ]
     )
