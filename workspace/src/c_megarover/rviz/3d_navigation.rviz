@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
+        - /PointCloud22
       Splitter Ratio: 0.4529411792755127
     Tree Height: 725
   - Class: rviz_common/Selection
@@ -129,7 +130,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 169
+      Max Intensity: 161
       Min Color: 0; 0; 0
       Min Intensity: 0
       Name: PointCloud2
@@ -144,7 +145,7 @@ Visualization Manager:
         Filter size: 10
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /livox/lidar
+        Value: /livox/filtered_lidar
       Use Fixed Frame: true
       Use rainbow: true
       Value: true

@@ -15,12 +15,14 @@ import launch_ros.events
 from launch import LaunchDescription
 from launch_ros.actions import LifecycleNode
 from launch_ros.actions import Node
+from launch_ros.descriptions import ComposableNode
 from launch.actions import (
     DeclareLaunchArgument,
     GroupAction,
     IncludeLaunchDescription,
     SetEnvironmentVariable,
 )
+from launch_ros.actions import LoadComposableNodes
 from launch_ros.actions import PushRosNamespace
 from launch_ros.descriptions import ParameterFile
 from nav2_common.launch import ReplaceString, RewrittenYaml
@@ -127,70 +129,152 @@ def generate_launch_description():
         allow_substs=True,
     )
 
-    lifecycle_nodes = ["map_server"]
+    lifecycle_nodes = [
+        "map_server",
+        "controller_server",
+        "smoother_server",
+        "planner_server",
+        "behavior_server",
+        "bt_navigator",
+        "waypoint_follower",
+        "velocity_smoother",
+    ]
+
+    remappings = [
+        ("/tf", "tf"),
+        ("/tf_static", "tf_static"),
+        ("/cmd_vel", "/rover_twist"),
+    ]
+
+    from launch_ros.descriptions import ComposableNode
+    from launch_ros.actions import ComposableNodeContainer
 
     bringup_cmd_group = GroupAction(
         [
             PushRosNamespace(condition=IfCondition(use_namespace), namespace=namespace),
-            SetRemap(src="/cmd_vel", dst="/rover_twist"),
             Node(
                 condition=IfCondition(use_composition),
                 name="nav2_container",
                 package="rclcpp_components",
                 executable="component_container_isolated",
-                parameters=[
-                    configured_params,
-                    {"autostart": autostart},
-                    {"use_sim_time": use_simulator},
-                ],
+                parameters=[configured_params, {"autostart": autostart}, {'use_sim_time': use_simulator}],
                 arguments=["--ros-args", "--log-level", log_level],
-                remappings=[("/tf", "tf"), ("/tf_static", "tf_static")],
+                remappings=remappings,
                 output="screen",
             ),
-            TimerAction(
-                period=2.0,
-                actions=[
-                    Node(
+            LoadComposableNodes(
+                condition=IfCondition(use_composition),
+                target_container="nav2_container",
+                composable_node_descriptions=[
+                    ComposableNode(
                         package="nav2_map_server",
-                        executable="map_server",
+                        plugin="nav2_map_server::MapServer",
                         name="map_server",
-                        output="screen",
-                        respawn=False,
-                        respawn_delay=2.0,
                         parameters=[
+                            configured_params,
+                            {"use_sim_time": use_simulator},
                             {"yaml_filename": map_2d_file_path},
                             {"frame_id": "map"},
                             {"topic_name": "map_2d"},
                         ],
+                        remappings=remappings,
+                    ),
+                    ComposableNode(
+                        package="nav2_lifecycle_manager",
+                        plugin="nav2_lifecycle_manager::LifecycleManager",
+                        name="lifecycle_manager_localization",
+                        parameters=[
+                            {
+                                "use_sim_time": use_simulator,
+                                "autostart": autostart,
+                                "node_names": lifecycle_nodes,
+                            }
+                        ],
+                    ),
+                    ComposableNode(
+                        package="nav2_controller",
+                        plugin="nav2_controller::ControllerServer",
+                        name="controller_server",
+                        parameters=[
+                            configured_params,
+                            {"use_sim_time": use_simulator},
+                        ],
+                        remappings=remappings + [("cmd_vel", "cmd_vel_nav")],
+                    ),
+                    ComposableNode(
+                        package="nav2_smoother",
+                        plugin="nav2_smoother::SmootherServer",
+                        name="smoother_server",
+                        parameters=[
+                            configured_params,
+                            {"use_sim_time": use_simulator},
+                        ],
+                        remappings=remappings,
+                    ),
+                    ComposableNode(
+                        package="nav2_planner",
+                        plugin="nav2_planner::PlannerServer",
+                        name="planner_server",
+                        parameters=[
+                            configured_params,
+                            {"use_sim_time": use_simulator},
+                        ],
+                        remappings=remappings,
+                    ),
+                    ComposableNode(
+                        package="nav2_behaviors",
+                        plugin="behavior_server::BehaviorServer",
+                        name="behavior_server",
+                        parameters=[
+                            configured_params,
+                            {"use_sim_time": use_simulator},
+                        ],
+                        remappings=remappings,
+                    ),
+                    ComposableNode(
+                        package="nav2_bt_navigator",
+                        plugin="nav2_bt_navigator::BtNavigator",
+                        name="bt_navigator",
+                        parameters=[
+                            configured_params,
+                            {"use_sim_time": use_simulator},
+                        ],
+                        remappings=remappings,
+                    ),
+                    ComposableNode(
+                        package="nav2_waypoint_follower",
+                        plugin="nav2_waypoint_follower::WaypointFollower",
+                        name="waypoint_follower",
+                        parameters=[
+                            configured_params,
+                            {"use_sim_time": use_simulator},
+                        ],
+                        remappings=remappings,
+                    ),
+                    ComposableNode(
+                        package="nav2_velocity_smoother",
+                        plugin="nav2_velocity_smoother::VelocitySmoother",
+                        name="velocity_smoother",
+                        parameters=[
+                            configured_params,
+                            {"use_sim_time": use_simulator},
+                        ],
+                        remappings=remappings
+                        + [("cmd_vel", "cmd_vel_nav"), ("cmd_vel_smoothed", "cmd_vel")],
+                    ),
+                    ComposableNode(
+                        package="nav2_lifecycle_manager",
+                        plugin="nav2_lifecycle_manager::LifecycleManager",
+                        name="lifecycle_manager_navigation",
+                        parameters=[
+                            {
+                                "use_sim_time": use_simulator,
+                                "autostart": autostart,
+                                "node_names": lifecycle_nodes,
+                            }
+                        ],
                     ),
                 ],
-            ),
-            Node(
-                package="nav2_lifecycle_manager",
-                executable="lifecycle_manager",
-                name="lifecycle_manager_navigation",
-                output="screen",
-                arguments=["--ros-args", "--log-level", log_level],
-                parameters=[
-                    {"use_sim_time": use_simulator},
-                    {"autostart": autostart},
-                    {"node_names": lifecycle_nodes},
-                ],
-            ),
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    os.path.join(nav2_bringup_launch_dir, "navigation_launch.py")
-                ),
-                launch_arguments={
-                    "namespace": namespace,
-                    "use_sim_time": use_simulator,
-                    "autostart": autostart,
-                    "params_file": params_file,
-                    "use_composition": use_composition,
-                    "use_respawn": use_respawn,
-                    "container_name": "nav2_container",
-                    "map_file_path": map_file_path,
-                }.items(),
             ),
         ]
     )
@@ -223,7 +307,10 @@ def generate_launch_description():
             declare_log_level_cmd,
             declare_use_respawn_cmd,
             localization,
-            bringup_cmd_group,
+            TimerAction(
+                period=5.0,
+                actions=[bringup_cmd_group],
+            ),
             rviz_node,
         ]
     )
