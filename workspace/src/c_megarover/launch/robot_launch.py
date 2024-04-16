@@ -66,10 +66,14 @@ def generate_launch_description():
     )
 
     pub_odom_node = Node(
-        package="megarover3_bringup",
-        executable="pub_odom",
+        package="c_megarover_common",
+        executable="pub_odom_node",
         name="pub_odom",
         condition=IfCondition(use_robot_odom),
+        remappings=[
+            ("/odom", "/megarover_odom"), # pub
+            ("/rover_odo", "/rover_odo"), #sub
+        ],
     )
 
     # ros2 run micro_ros_agent micro_ros_agent serial --dev /dev/ttyUSB0 --baudrate 115200

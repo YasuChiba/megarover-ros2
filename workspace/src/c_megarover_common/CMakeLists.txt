@@ -37,6 +37,12 @@ EXECUTABLE pcd_to_pointcloud_node)
 ament_auto_add_executable(pcd_to_occupancygrid_tool
   src/tools/pcd_to_occupancygrid_tool.cpp)
 
+ament_auto_add_library(pub_odom SHARED
+  src/pub_odom.cpp)
+rclcpp_components_register_node(pub_odom 
+  PLUGIN "PubOdomNode"
+  EXECUTABLE pub_odom_node)
+
 ament_auto_package(
   INSTALL_TO_SHARE
     launch

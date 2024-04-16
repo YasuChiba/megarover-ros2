@@ -44,7 +44,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource([launch_dir_path, "/robot_launch.py"]),
         launch_arguments={
             "simulator": use_simulator,
-            "use_robot_odom": "false",
+            "use_robot_odom": "true",
         }.items(),
     )
 
