@@ -1,4 +1,4 @@
-image: sendagi.pgm
+image: map.pgm
 mode: trinary
 resolution: 0.02
 origin: [-2.18, -4.27, 0]

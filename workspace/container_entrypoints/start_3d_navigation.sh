@@ -16,7 +16,7 @@ source /opt/ros/humble/setup.bash && \
     source /home/user/uros_ws/install/setup.bash && \
     source /home/user/workspace/install/setup.bash && \
     if [ -e /dev/ttyUSB0 ]; then sudo chmod 666 /dev/ttyUSB0; fi && \
-    ros2 launch c_megarover navigation_launch.py simulator:=false rviz:=true map_file_path:=/home/user/workspace/maps/sendagi.pcd map_2d_file_path:=/home/user/workspace/maps/sendagi.yaml &
+    ros2 launch c_megarover navigation_launch.py simulator:=false rviz:=true map_file_path:=/home/user/workspace/maps/map.pcd map_2d_file_path:=/home/user/workspace/maps/map.yaml &
     
 PID=$!
 
