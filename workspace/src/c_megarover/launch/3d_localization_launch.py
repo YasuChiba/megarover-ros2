@@ -140,6 +140,9 @@ def generate_launch_description():
             PathJoinSubstitution([config_dir_path, "3dlocalization.yaml"]),
             {"use_sim_time": use_simulator},
         ],
+        remappings=[
+            ("/odometry/filtered", "/odometry/filtered"), # pub
+        ]
     )
 
     # delay 3 sec to wait for robot to be ready
