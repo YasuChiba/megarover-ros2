@@ -54,6 +54,7 @@ RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
 RUN echo "source /home/user/ws_livox/install/setup.bash" >> ~/.bashrc
 RUN echo "source /home/user/uros_ws/install/setup.bash" >> ~/.bashrc
 RUN echo "source /home/user/workspace/install/setup.bash" >> ~/.bashrc
+RUN echo "sudo chmod 666 /dev/ttyUSB0" >> ~/.bashrc
 
-WORKDIR /home/$USERNAME
+WORKDIR /home/$USERNAME/workspace
 
