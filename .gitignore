@@ -28,4 +28,5 @@ workspace/log
 workspace/rosbag
 
 map/
+maps/
 pcd/
