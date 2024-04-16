@@ -51,7 +51,7 @@ def generate_launch_description():
 
     # delay 3 sec to wait for robot to be ready
     rviz_node = TimerAction(
-        period=3.0,
+        period=0.0,
         actions=[
             Node(
                 package="rviz2",
@@ -69,6 +69,21 @@ def generate_launch_description():
         ],
     )
 
+    # generate rosbag file name based on the date
+    rosbagfilename = "rosbag_" + os.popen("date +'%Y-%m-%d_%H-%M-%S'").read().strip()
+    rosbag_record = launch.actions.ExecuteProcess(
+        condition=UnlessCondition(use_simulator),
+        cmd=["ros2", "bag", "record", "-a", "-o", "/home/user/workspace/rosbag/" + rosbagfilename],
+        output="screen",
+    )
+
     return LaunchDescription(
-        [declare_rviz_cmd, declare_simulator_cmd, robot_launch, lidar_launch, rviz_node]
+        [
+            declare_rviz_cmd,
+            declare_simulator_cmd,
+            robot_launch,
+            lidar_launch,
+            rosbag_record,
+            rviz_node,
+        ]
     )
