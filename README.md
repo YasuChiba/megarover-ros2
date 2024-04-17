@@ -66,6 +66,7 @@ SLAMの結果の点群を、rosbagから取り出すには....
        - `ros2 run c_megarover_common pointcloud_to_pcd_node --ros-args -p prefix:=/home/user/workspace/pcd/ -r input:=/Laser_map`
    1. pcdファイルが出力されたあとに以下を実行
        - `ros2 run c_megarover_common pcd_to_occupancygrid_tool --ros-args -p pcd_file_path:=/home/user/workspace/pcd/1713279228.582533121.pcd -p output_file_path:=/home/user/workspace/maps/map2`
+       - `ros2 run c_megarover_common pcd_to_occupancygrid_tool --ros-args -p pcd_file_path:=/home/user/workspace/maps/map2.pcd -p output_file_path:=/home/user/workspace/maps/map2 -p thres_point_count:=2`
 
 ## 2D navigation
 コンテナ外で`start_2d_navigation.sh`を実行. 参照する地図を変える場合`workspace/container_entrypoints/start_2d_navigation.sh`を編集。

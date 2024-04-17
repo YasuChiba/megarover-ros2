@@ -1,7 +1,7 @@
 import sys
 import yaml
 import csv
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QLineEdit
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QLineEdit, QScrollArea
 from PyQt5.QtGui import QPixmap, QImage
 from PIL import Image
 
@@ -22,9 +22,13 @@ class ImageWindow(QMainWindow):
         self.btn_load.clicked.connect(self.loadImage)
         self.layout.addWidget(self.btn_load)
 
-        # Label to display the image
+        # Scroll area for displaying the image
+        self.scroll_area = QScrollArea(self)
         self.label_image = QLabel(self)
-        self.layout.addWidget(self.label_image)
+        self.label_image.setScaledContents(True)
+        self.scroll_area.setWidget(self.label_image)
+        self.scroll_area.setWidgetResizable(True)
+        self.layout.addWidget(self.scroll_area)
 
         # Text field for entering labels
         self.text_label = QLineEdit(self)
