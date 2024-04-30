@@ -50,6 +50,13 @@ RUN sudo apt update && sudo apt install -y vim ros-humble-slam-toolbox \
 RUN sudo apt update && sudo apt install -y python3-open3d ros-humble-tf-transformations ros-humble-robot-localization
 RUN pip install ros2-numpy transforms3d
 
+## realsense
+WORKDIR /home/$USERNAME
+RUN mkdir realsense
+WORKDIR /home/$USERNAME/realsense
+RUN git clone https://github.com/IntelRealSense/librealsense.git
+RUN cd librealsense && ./scripts/libuvc_installation.sh
+
 RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
 RUN echo "source /home/user/ws_livox/install/setup.bash" >> ~/.bashrc
 RUN echo "source /home/user/uros_ws/install/setup.bash" >> ~/.bashrc
