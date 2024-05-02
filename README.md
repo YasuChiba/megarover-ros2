@@ -106,7 +106,7 @@ SLAMの結果の点群を、rosbagから取り出すには....
 slam_toolboxはodomが必須なので、create_2dmap_launch.pyはodomがある環境で試す。
 
 ## using realsese with jetson
-(maybe) need to run ./setup_udev_rules.sh in librealsense2  
+(maybe) need to run ./setup_udev_rules.sh in librealsense2 on the host machine  
 ros2 launch realsense2_camera rs_launch.py initial_reset:=trueorarily unavailable, number: 11
 
 
