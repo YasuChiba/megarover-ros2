@@ -1,6 +1,6 @@
 
 
-`xhost +local:`を実行して置かないとrvizが使えないかも?
+`xhost +local:`を実行
 
 1. clone
 submoduleごとclone
@@ -104,5 +104,9 @@ SLAMの結果の点群を、rosbagから取り出すには....
 
 ## slam_toolbox
 slam_toolboxはodomが必須なので、create_2dmap_launch.pyはodomがある環境で試す。
+
+## using realsese with jetson
+(maybe) need to run ./setup_udev_rules.sh in librealsense2  
+ros2 launch realsense2_camera rs_launch.py initial_reset:=trueorarily unavailable, number: 11
 
 
