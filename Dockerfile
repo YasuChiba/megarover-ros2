@@ -39,7 +39,9 @@ RUN sudo apt install -y vim ros-humble-slam-toolbox \
 RUN sudo apt install -y python3-open3d ros-humble-tf-transformations ros-humble-robot-localization
 RUN pip install ros2-numpy transforms3d
 
-
+RUN sudo apt install -y python3-rosdep
+RUN sudo apt install -y ros-dev-tools
+RUN sudo apt install v4l-utils
 
 # Install livox SDK
 WORKDIR /home/$USERNAME
@@ -57,14 +59,12 @@ RUN git clone https://github.com/Livox-SDK/livox_ros_driver2.git ws_livox/src/li
 RUN /bin/bash -c 'source /opt/ros/humble/setup.sh && /home/user/ws_livox/src/livox_ros_driver2/build.sh humble'
 
 # Install micro-ROS
-RUN sudo apt install -y python3-rosdep
 WORKDIR /home/$USERNAME
 RUN mkdir uros_ws
 WORKDIR /home/$USERNAME/uros_ws
 RUN git clone -b humble https://github.com/micro-ROS/micro_ros_setup.git src/micro_ros_setup
 RUN /bin/bash -c 'source /opt/ros/humble/setup.sh && sudo rosdep init && rosdep update'
 RUN /bin/bash -c 'source /opt/ros/humble/setup.sh && rosdep install --from-paths src --ignore-src -y'
-RUN sudo apt install -y ros-dev-tools
 RUN /bin/bash -c 'source /opt/ros/humble/setup.sh && colcon build'
 RUN /bin/bash -c 'source ~/uros_ws/install/setup.sh && ros2 run micro_ros_setup create_agent_ws.sh && ros2 run micro_ros_setup build_agent.sh'
 
