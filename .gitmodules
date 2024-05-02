@@ -9,3 +9,6 @@
 [submodule "workspace/src/thirdparty/megarover3_ros2"]
 	path = workspace/src/thirdparty/megarover3_ros2
 	url = https://github.com/vstoneofficial/megarover3_ros2.git
+[submodule "workspace/src/thirdparty/realsense-ros"]
+	path = workspace/src/thirdparty/realsense-ros
+	url = https://github.com/IntelRealSense/realsense-ros.git
