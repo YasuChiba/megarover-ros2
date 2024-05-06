@@ -110,6 +110,6 @@ def generate_launch_description():
             robot_state_publisher_node,
             pub_odom_node,
             micro_ros_agent_node,
-            realsense_launch,
+            #realsense_launch,
         ]
     )

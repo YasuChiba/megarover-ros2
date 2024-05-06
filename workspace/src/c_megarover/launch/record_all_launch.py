@@ -75,7 +75,7 @@ def generate_launch_description():
         condition=UnlessCondition(use_simulator),
 
         # exclude theora and compressed topics
-        cmd=["ros2", "bag", "record", "-o", "/home/user/workspace/rosbag/" + rosbagfilename, "-a", "-x", "(.*)theora(.*)|(.*)compressed(.*)"],
+        cmd=["ros2", "bag", "record", "-o", "/home/user/workspace/rosbag/" + rosbagfilename, "/livox/imu", "/livox/lidar"],
         output="screen",
     )
 
