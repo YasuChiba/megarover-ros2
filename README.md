@@ -110,3 +110,7 @@ slam_toolboxはodomが必須なので、create_2dmap_launch.pyはodomがある�
 (maybe) need to run ./setup_udev_rules.sh in librealsense2 on the host machine  
 ros2 launch realsense2_camera rs_launch.py initial_reset:=true  
 colcon build --cmake-args '-DBUILD_ACCELERATE_GPU_WITH_GLSL=ON'  
+
+
+## ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args --remap cmd_vel:=/rover_twist  
+sudo apt-get install ros-humble-teleop-twist-keyboard
