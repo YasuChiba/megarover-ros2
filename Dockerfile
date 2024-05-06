@@ -41,7 +41,7 @@ RUN pip install ros2-numpy transforms3d
 
 RUN sudo apt install -y python3-rosdep
 RUN sudo apt install -y ros-dev-tools
-RUN sudo apt install v4l-utils
+RUN sudo apt install -y v4l-utils
 
 # Install livox SDK
 WORKDIR /home/$USERNAME

@@ -1,6 +1,7 @@
 
 
-`xhost +local:`を実行
+`xhost +local:`を実行  
+sudo chmod 777 /dev/video* (run on host machine)    
 
 1. clone
 submoduleごとclone
@@ -105,8 +106,7 @@ SLAMの結果の点群を、rosbagから取り出すには....
 ## slam_toolbox
 slam_toolboxはodomが必須なので、create_2dmap_launch.pyはodomがある環境で試す。
 
-## using realsese with jetson
+## using realsense with jetson
 (maybe) need to run ./setup_udev_rules.sh in librealsense2 on the host machine  
-ros2 launch realsense2_camera rs_launch.py initial_reset:=trueorarily unavailable, number: 11
-
-
+ros2 launch realsense2_camera rs_launch.py initial_reset:=true  
+colcon build --cmake-args '-DBUILD_ACCELERATE_GPU_WITH_GLSL=ON'  
