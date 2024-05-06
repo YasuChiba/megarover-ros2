@@ -73,7 +73,9 @@ def generate_launch_description():
     rosbagfilename = "rosbag_" + os.popen("date +'%Y-%m-%d_%H-%M-%S'").read().strip()
     rosbag_record = launch.actions.ExecuteProcess(
         condition=UnlessCondition(use_simulator),
-        cmd=["ros2", "bag", "record", "-a", "-o", "/home/user/workspace/rosbag/" + rosbagfilename],
+
+        # exclude theora and compressed topics
+        cmd=["ros2", "bag", "record", "-o", "/home/user/workspace/rosbag/" + rosbagfilename, "-a", "-x", "(.*)theora(.*)|(.*)compressed(.*)"],
         output="screen",
     )
 

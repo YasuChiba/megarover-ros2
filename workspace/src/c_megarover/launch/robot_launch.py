@@ -90,6 +90,16 @@ def generate_launch_description():
         condition=UnlessCondition(use_simulator),
     )
 
+    # launch realsense node isomg rs_launch.py file in realsense2_camera package.
+    realsense_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory("realsense2_camera"), "launch", "rs_launch.py"
+            )
+        ),
+        condition=UnlessCondition(use_simulator),
+    )
+
     return LaunchDescription(
         [
             declare_simulator_cmd,
@@ -100,5 +110,6 @@ def generate_launch_description():
             robot_state_publisher_node,
             pub_odom_node,
             micro_ros_agent_node,
+            realsense_launch,
         ]
     )
