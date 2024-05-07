@@ -12,6 +12,8 @@ PointCloudFilter::PointCloudFilter(
     const std::string &name_space,
     const rclcpp::NodeOptions &options) : Node("pointcloud_filter_node", name_space, options)
 {
+
+  isCropEnabled = this->declare_parameter("crop_enabled", true);
   pcl_subscription_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
       "in_cloud", 10, std::bind(&PointCloudFilter::pcl_callback, this, std::placeholders::_1));
   pcl_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("out_cloud", 10);
@@ -25,14 +27,21 @@ void PointCloudFilter::pcl_callback(const sensor_msgs::msg::PointCloud2::SharedP
   pcl::PointCloud<LivoxPointXyzitlt>::Ptr cloud_filtered(new pcl::PointCloud<LivoxPointXyzitlt>);
   pcl::fromROSMsg(*cloud_msg, *cloud);
 
-  // // PassThrough Filter
-  pcl::PassThrough<LivoxPointXyzitlt> pass;
-  pass.setInputCloud(cloud);
-  pass.setFilterFieldName("x"); // x axis
-  // extract point cloud between 1.0 and 3.0 m
-  pass.setFilterLimits(0.0, 100.0);
-  // pass.setFilterLimitsNegative (true);   // extract range reverse
-  pass.filter(*cloud_filtered);
+  // set cloud to cloud_filtererd
+  *cloud_filtered = *cloud;
+
+  // if crop is enabled, run the filter
+  if (isCropEnabled)
+  {
+    // // PassThrough Filter
+    pcl::PassThrough<LivoxPointXyzitlt> pass;
+    pass.setInputCloud(cloud);
+    pass.setFilterFieldName("x"); // x axis
+    // extract point cloud between 1.0 and 3.0 m
+    pass.setFilterLimits(0.0, 100.0);
+    // pass.setFilterLimitsNegative (true);   // extract range reverse
+    pass.filter(*cloud_filtered);
+  }
 
   // // Approximate Voxel Grid
   // pcl::ApproximateVoxelGrid<pcl::PointXYZRGB> avg;

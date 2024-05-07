@@ -48,6 +48,20 @@ def generate_launch_description():
         PythonLaunchDescriptionSource([launch_dir_path, "/robot_launch.py"]),
         launch_arguments={"simulator": use_simulator}.items(),
     )
+    
+    # launch pointcloud_filter_node
+    pointcloud_filter_node = Node(
+        package="c_megarover_common",
+        executable="pointcloud_filter_node",
+        output="screen",
+        parameters=[
+            {"use_sim_time": use_simulator},
+        ],
+        remappings=[
+            ("/in_cloud", "/livox/lidar"),
+            ("/out_cloud", "/livox/filtered_lidar")
+        ]
+    )
 
     # delay 3 sec to wait for robot to be ready
     rviz_node = TimerAction(
@@ -86,6 +100,7 @@ def generate_launch_description():
             robot_launch,
             lidar_launch,
             rosbag_record,
+            #pointcloud_filter_node,
             rviz_node,
         ]
     )
