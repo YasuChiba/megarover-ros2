@@ -43,9 +43,9 @@ fastlio_mapping:
 
         publish:
             path_en: false                # true: publish Path
-            effect_map_en: false         # true: publish Effects
-            map_en: false                 # true: publish Map cloud
-            scan_publish_en:  false       # false: close all the point cloud output
+            effect_map_en: true         # true: publish Effects
+            map_en: true                 # true: publish Map cloud
+            scan_publish_en:  true       # false: close all the point cloud output
             dense_publish_en: false      # false: low down the points number in a global-frame point clouds scan.
             scan_bodyframe_pub_en: false  # true: output the point cloud scans in IMU-body-frame
             broadcast_odom_en: true      # true: broadcast the tf odom frame
@@ -62,8 +62,8 @@ global_localization:
         scan_voxel_size: 0.01
         localization_threshold: 0.95
         fov: 3.14
-        fov_far: 20.0
-        freq_localization: 2.0
+        fov_far: 40.0
+        freq_localization: 1.0
         #map_file_path: "./test.pcd"
         map_frame: "map"
         odom_frame: "odom"
