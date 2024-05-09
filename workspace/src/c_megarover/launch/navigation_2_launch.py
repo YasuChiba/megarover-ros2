@@ -58,6 +58,7 @@ def generate_launch_description():
     
     nodes.extend(lidar(xfer_format, lidar_config_path))
     nodes.extend(robot(robot_model_path, use_simulator, broadcast_robot_odom, robot_usb_device))
+    nodes.extend(realsense())
     nodes.extend(localization(map_file_path, config_dir_path, use_simulator))
     nodes.extend(navigation(nav2_params_file, use_simulator, map_2d_file_path, autostart))
 
@@ -189,6 +190,17 @@ def robot(robot_model_path, use_simulator, broadcast_robot_odom, robot_usb_devic
         micro_ros_agent_node,
     ]
 
+
+def realsense():
+    # launch realsense node isomg rs_launch.py file in realsense2_camera package.
+    realsense_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                get_package_share_directory("realsense2_camera"), "launch", "rs_launch.py"
+            )
+        )
+    )
+    return [realsense_launch]
 
 def localization(map_file_path, config_dir_path, use_simulator):
 
