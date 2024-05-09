@@ -75,12 +75,15 @@ RUN tar -zxvf v2.55.1.tar.gz
 RUN rm v2.55.1.tar.gz 
 RUN cd librealsense-2.55.1/scripts && sudo ./libuvc_installation.sh -DBUILD_WITH_CUDA=true
 
+RUN sudo apt install -y ros-humble-rmw-cyclonedds-cpp
 
 RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
 RUN echo "source /home/user/ws_livox/install/setup.bash" >> ~/.bashrc
 RUN echo "source /home/user/uros_ws/install/setup.bash" >> ~/.bashrc
 RUN echo "source /home/user/workspace/install/setup.bash" >> ~/.bashrc
 RUN echo "sudo chmod 666 /dev/ttyUSB0" >> ~/.bashrc
-
+RUN echo "source /home/user/workspace/install/setup.bash" >> ~/.bashrc
+RUN echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> ~/.bashrc
+RUN echo "export RCUTILS_COLORIZED_OUTPUT=1" >> ~/.bashrc
 WORKDIR /home/$USERNAME/workspace
 
