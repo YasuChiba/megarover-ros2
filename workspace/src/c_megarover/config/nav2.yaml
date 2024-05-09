@@ -110,10 +110,10 @@ controller_server:
       min_speed_theta: 0.0
       acc_lim_x: 2.5
       acc_lim_y: 0.0
-      acc_lim_theta: 3.2
+      acc_lim_theta: 2.0
       decel_lim_x: -2.5
       decel_lim_y: 0.0
-      decel_lim_theta: -3.2
+      decel_lim_theta: -2.0
       vx_samples: 20
       vy_samples: 5
       vtheta_samples: 20
@@ -158,9 +158,7 @@ local_costmap:
       initial_transform_timeout: 60.0
       trinary_costmap: True
       use_maximum: False
-      #plugins: ["voxel_layer", "inflation_layer"]
       plugins: ["obstacle_layer", "inflation_layer"]
-      #plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
@@ -182,17 +180,10 @@ local_costmap:
           obstacle_min_range: 0.0
           raytrace_max_range: 3.0
           raytrace_min_range: 0.0
-      static_layer:
-        plugin: "nav2_costmap_2d::StaticLayer"
-        enabled: true
-        footprint_clearing_enabled: True # TODO
-        subscribe_to_updates: True # TODO
-        map_subscribe_transient_local: True
-        transform_tolerance: 0.3 # TODO
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: True
-        cost_scaling_factor: 5.0
+        cost_scaling_factor: 10.0
         inflation_radius: 0.2
 
 global_costmap:
@@ -250,8 +241,8 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: True
-        cost_scaling_factor: 5.0
-        inflation_radius: 0.2
+        cost_scaling_factor: 10.0
+        inflation_radius: 0.3
   #global_costmap_client:
   #  ros__parameters:
   #    use_sim_time: False
@@ -276,7 +267,7 @@ map_saver:
 planner_server:
   ros__parameters:
     planner_plugins: ["GridBased"]
-    expected_planner_frequency: 20.0
+    expected_planner_frequency: 10.0
     GridBased:
       plugin: "nav2_navfn_planner/NavfnPlanner"
       tolerance: 0.5
