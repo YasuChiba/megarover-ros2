@@ -48,8 +48,8 @@ def generate_launch_description():
 
     robot_usb_device = "/dev/ttyUSB0"
     
-    map_file_path = "/home/user/workspace/maps/map2.pcd"
-    map_2d_file_path = "/home/user/workspace/maps/map2.yaml"
+    map_file_path = "/home/user/workspace/maps/lab.pcd"
+    map_2d_file_path = "/home/user/workspace/maps/lab.yaml"
     
     nav2_params_file = os.path.join(config_dir_path, "nav2.yaml")
     autostart = LaunchConfiguration("autostart", default=True)
@@ -441,5 +441,10 @@ def navigation(params_file, use_simulator, map_2d_file_path, autostart):
             ),
         ]
     )
-    return [bringup_cmd_group]
+    return [
+        TimerAction(
+            period=3.0,
+            actions=[bringup_cmd_group],
+        ),
+    ]
     
