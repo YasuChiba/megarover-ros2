@@ -99,7 +99,7 @@ controller_server:
       stateful: True
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      desired_linear_vel: 0.2
+      desired_linear_vel: 0.17
       lookahead_dist: 0.5
       min_lookahead_dist: 0.2
       max_lookahead_dist: 1.2
@@ -120,7 +120,7 @@ controller_server:
       use_rotate_to_heading: true
       allow_reversing: false
       rotate_to_heading_min_angle: 0.785
-      max_angular_accel: 3.2
+      max_angular_accel: 2.0
       max_robot_pose_search_dist: 10.0
 
 local_costmap:
