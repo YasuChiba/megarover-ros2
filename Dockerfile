@@ -12,6 +12,7 @@ RUN groupadd -g $GID $GROUPNAME && \
     useradd -m -s /bin/bash -u $UID -g $GID -G sudo $USERNAME && \
     echo $USERNAME:$PASSWORD | chpasswd && \
     echo "$USERNAME   ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+RUN sudo usermod -aG sudo,video $USERNAME
 USER $USERNAME
 WORKDIR /home/$USERNAME/
 
@@ -85,5 +86,7 @@ RUN echo "sudo chmod 666 /dev/ttyUSB0" >> ~/.bashrc
 RUN echo "source /home/user/workspace/install/setup.bash" >> ~/.bashrc
 RUN echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> ~/.bashrc
 RUN echo "export RCUTILS_COLORIZED_OUTPUT=1" >> ~/.bashrc
+
+
 WORKDIR /home/$USERNAME/workspace
 

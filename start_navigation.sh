@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Define the container name
-CONTAINER_NAME="megarover-start-recording"
+CONTAINER_NAME="megarover-start-3dnav"
 
-echo "Starting ROS 2 bag recording..."
+echo "Starting 3d navigation..."
 
 # Step 1: Run Docker container in detached mode and save the container ID
 docker run -it --runtime=nvidia --network=host --ipc=host --pid=host --privileged \
@@ -11,7 +11,7 @@ docker run -it --runtime=nvidia --network=host --ipc=host --pid=host --privilege
         -v /tmp/.X11-unix:/tmp/.X11-unix \
         -v /dev:/dev \
         -e DISPLAY=$DISPLAY \
-        --name $CONTAINER_NAME \ 
+        --name $CONTAINER_NAME \
         megarover-ros2-ros \
         /home/user/workspace/container_entrypoints/start_3d_navigation.sh
         
