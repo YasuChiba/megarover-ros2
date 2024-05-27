@@ -16,7 +16,7 @@ source /opt/ros/humble/setup.bash && \
     source /home/user/uros_ws/install/setup.bash && \
     source /home/user/workspace/install/setup.bash && \
     if [ -e /dev/ttyUSB0 ]; then sudo chmod 666 /dev/ttyUSB0; fi && \
-    python3 /home/koshizuka-lab/Documents/megarover-ros2/workspace/src/c_megarover_common/scripts/waypoint_follower.py &
+    python3 /home/user/workspace/src/c_megarover_common/scripts/waypoint_follower.py &
     
 PID=$!
 
