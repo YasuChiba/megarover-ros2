@@ -1,7 +1,14 @@
 
+# ハードウェア
+1. 車体: メガローバー ver3.0
+1. PC: Jetson AGX Orin
+1. Lidar: Livox Mid360
+1. カメラ: Realsense D455
+1. DCDCコンバータ: YDS-812
 
-`xhost +local:`を実行  
-sudo chmod 777 /dev/video* (run on host machine)    
+<img src="doc/images/robot_overview.jpg" width="30%" /> <img src="doc/images/board.jpg" width="30%" />
+
+# ソフトウェア
 
 1. clone
 submoduleごとclone
@@ -19,6 +26,14 @@ pip3 install transforms3d
 ```
 
 2. run
+
+ホスト側で下記を実行
+```
+`xhost +local:` 
+sudo chmod 777 /dev/video* 
+```
+
+必要に応じて以下をコンテナ内で実行
 ```
 ros2 launch c_megarover msg_MID360_launch.py
 ros2 launch c_megarover create_3dmap_launch.py rviz:=true
@@ -114,3 +129,4 @@ colcon build --cmake-args '-DBUILD_ACCELERATE_GPU_WITH_GLSL=ON'
 
 ## ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args --remap cmd_vel:=/rover_twist  
 sudo apt-get install ros-humble-teleop-twist-keyboard
+
