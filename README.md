@@ -80,7 +80,7 @@ SLAMの結果の点群を、rosbagから取り出すには....
        - `ros2 bag play rosbag/rosbag_2024-xxxx/ --topics /livox/imu /livox/lidar`
    1. マッピングの終盤に以下を実行
        - `ros2 run c_megarover_common pointcloud_to_pcd_node --ros-args -p prefix:=/home/user/workspace/pcd/ -r input:=/Laser_map`
-   1. pcdファイルが出力されたあとに以下を実行
+   1. pcdファイルが出力されたあとに以下を実行(出力のpgmファイルが変だったらthres_point_countつける。)
        - `ros2 run c_megarover_common pcd_to_occupancygrid_tool --ros-args -p pcd_file_path:=/home/user/workspace/pcd/1713279228.582533121.pcd -p output_file_path:=/home/user/workspace/maps/map2`
        - `ros2 run c_megarover_common pcd_to_occupancygrid_tool --ros-args -p pcd_file_path:=/home/user/workspace/maps/map2.pcd -p output_file_path:=/home/user/workspace/maps/map2 -p thres_point_count:=2`
 

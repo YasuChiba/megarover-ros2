@@ -48,8 +48,8 @@ def generate_launch_description():
 
     robot_usb_device = "/dev/ttyUSB0"
     
-    map_file_path = "/home/user/workspace/maps/lab.pcd"
-    map_2d_file_path = "/home/user/workspace/maps/lab.yaml"
+    map_file_path = "/home/user/workspace/maps/a304.pcd"
+    map_2d_file_path = "/home/user/workspace/maps/a304.yaml"
     
     nav2_params_file = os.path.join(config_dir_path, "nav2.yaml")
     autostart = LaunchConfiguration("autostart", default=True)

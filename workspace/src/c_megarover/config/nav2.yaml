@@ -94,17 +94,17 @@ controller_server:
     goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.3
-      yaw_goal_tolerance: 0.3
+      xy_goal_tolerance: 0.1
+      yaw_goal_tolerance: 0.1
       stateful: True
     FollowPath:
       plugin: "nav2_regulated_pure_pursuit_controller::RegulatedPurePursuitController"
-      desired_linear_vel: 0.17
+      desired_linear_vel: 0.13
       lookahead_dist: 0.5
       min_lookahead_dist: 0.2
       max_lookahead_dist: 1.2
       lookahead_time: 1.5
-      rotate_to_heading_angular_vel: 0.5
+      rotate_to_heading_angular_vel: 0.4
       transform_tolerance: 0.3
       use_velocity_scaled_lookahead_dist: false
       min_approach_linear_velocity: 0.05
@@ -116,11 +116,11 @@ controller_server:
       curvature_lookahead_dist: 0.25
       use_cost_regulated_linear_velocity_scaling: false
       regulated_linear_scaling_min_radius: 0.9
-      regulated_linear_scaling_min_speed: 0.25
+      regulated_linear_scaling_min_speed: 0.2
       use_rotate_to_heading: true
       allow_reversing: false
       rotate_to_heading_min_angle: 0.785
-      max_angular_accel: 2.0
+      max_angular_accel: 1.0
       max_robot_pose_search_dist: 10.0
 
 local_costmap:
@@ -149,16 +149,15 @@ local_costmap:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
         footprint_clearing_enabled: True
-        max_obstacle_height: 1.0
+        max_obstacle_height: 1.3
         combination_method: 1
         observation_sources: scan
         scan:
           topic: /livox/filtered_lidar
           observation_persistence: 0.0 # TODO
-          max_obstacle_height: 0.5
           data_type: "PointCloud2"
-          min_obstacle_height: 0.03
-          max_obstacle_height: 1.0
+          min_obstacle_height: 0.05
+          max_obstacle_height: 1.3
           #inf_is_valid: True # TODO
           marking: True # TODO
           clearing: True
@@ -170,7 +169,7 @@ local_costmap:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: True
         cost_scaling_factor: 10.0
-        inflation_radius: 0.3
+        inflation_radius: 10.0
 
 global_costmap:
   global_costmap:
@@ -198,16 +197,15 @@ global_costmap:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
         footprint_clearing_enabled: True
-        max_obstacle_height: 1.0
+        max_obstacle_height: 1.3
         combination_method: 1
         observation_sources: scan
         scan:
           topic: /livox/filtered_lidar
           observation_persistence: 0.0 # TODO
-          max_obstacle_height: 0.5
           data_type: "PointCloud2"
-          min_obstacle_height: 0.03
-          max_obstacle_height: 1.0
+          min_obstacle_height: 0.05
+          max_obstacle_height: 1.3
           #inf_is_valid: True # TODO
           marking: False # TODO
           clearing: True
@@ -222,13 +220,13 @@ global_costmap:
         footprint_clearing_enabled: True # TODO
         subscribe_to_updates: True # TODO
         map_subscribe_transient_local: True
-        transform_tolerance: 0.3 # TODO
+        transform_tolerance: 0.5 # TODO
 
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: True
         cost_scaling_factor: 10.0
-        inflation_radius: 0.4
+        inflation_radius: 10.0
   #global_costmap_client:
   #  ros__parameters:
   #    use_sim_time: False
@@ -323,10 +321,10 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [0.5, 0.0, 1.0]
-    min_velocity: [-0.5, 0.0, -1.0]
-    max_accel: [2.5, 0.0, 3.2]
-    max_decel: [-2.5, 0.0, -3.2]
+    max_velocity: [0.2, 0.0, 0.2]
+    min_velocity: [-0.2, 0.0, -0.2]
+    max_accel: [1.0, 0.0, 1.0]
+    max_decel: [-1.0, 0.0, -1.0]
     odom_topic: "/megarover_odom"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]

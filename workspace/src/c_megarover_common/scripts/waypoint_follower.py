@@ -28,13 +28,12 @@ def main():
     navigator = BasicNavigator()
 
     inspection_route = [
-        #ここの座標を自分の設定したい座標に変更
-        [2.47, 0.614],
-        [1.44, 5.63],
-        [2.11,13.83],
-        [5.64, -3.35],
-        [1.44, 5.63]]
-
+        #ここの座標を自分の設定したい座標に変更. 
+        # position.x, position.y, position.z, orientation.x, orientation.y, orientation.z, orientation.w
+        [0.31541728,-0.709159, 0.0, 0.0, 0.0, -0.686745,0.7268981115],
+        [0.41692, -1.1491005, 0.0, 0.0, 0.0,  -0.7133, 0.700835325],
+        [2.93, -2.17, 0.0, 0.0, 0.0, 0.80, 0.5972],
+    ]
 
     # Set our demo's initial pose
     #initial_pose = PoseStamped()
@@ -63,6 +62,11 @@ def main():
         for pt in inspection_route:
             inspection_pose.pose.position.x = pt[0]
             inspection_pose.pose.position.y = pt[1]
+            inspection_pose.pose.position.z = pt[2]
+            inspection_pose.pose.orientation.x = pt[3]
+            inspection_pose.pose.orientation.y = pt[4]
+            inspection_pose.pose.orientation.z = pt[5]
+            inspection_pose.pose.orientation.w = pt[6]
             inspection_poinsts.append(deepcopy(inspection_pose))
         nav_start = navigator.get_clock().now()
         navigator.followWaypoints(inspection_poinsts)

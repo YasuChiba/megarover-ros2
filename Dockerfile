@@ -84,9 +84,11 @@ RUN echo "source /home/user/uros_ws/install/setup.bash" >> ~/.bashrc
 RUN echo "source /home/user/workspace/install/setup.bash" >> ~/.bashrc
 RUN echo "sudo chmod 666 /dev/ttyUSB0" >> ~/.bashrc
 RUN echo "source /home/user/workspace/install/setup.bash" >> ~/.bashrc
-#RUN echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> ~/.bashrc
+RUN echo "export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp" >> ~/.bashrc
 RUN echo "export RCUTILS_COLORIZED_OUTPUT=1" >> ~/.bashrc
+#RUN echo "export ROS_DOMAIN_ID=52" >> ~/.bashrc
 
+#RUN echo "export ROS_LOCALHOST_ONLY=1" >> ~/.bashrc
 
 WORKDIR /home/$USERNAME/workspace
 
