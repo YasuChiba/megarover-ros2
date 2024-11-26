@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-package_name = 'robot-teleop'
+package_name = 'robot_teleop'
 
 setup(
     name=package_name,
@@ -20,6 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            "teleop_client = robot_teleop.teleop_client:main",
         ],
     },
 )
